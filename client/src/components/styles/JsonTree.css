@@ -1,0 +1,39 @@
+.tree {
+    list-style-type: none;
+    padding-left: 20px;
+}
+
+.tree-item {
+display: flex;
+align-items: flex-start;
+margin-bottom: 4px;
+}
+
+.tree-key {
+font-weight: bold;
+margin-right: 5px;
+padding: 2px 5px;
+border-radius: 3px;
+}
+
+.tree-value {
+padding: 2px 5px;
+border-radius: 3px;
+}
+
+@media (max-width: 768px) {
+    .tree {
+      padding-left: 10px; /* Slightly reduce the left padding on mobile */
+    }
+
+.tree-item {
+    margin-left: 5px; /* Reduce the indentation for nested items on mobile */
+    flex-wrap: wrap;
+}
+
+.tree-key, .tree-value {
+    margin-bottom: 2px;
+    white-space: nowrap;
+}
+}
+

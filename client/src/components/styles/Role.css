@@ -1,0 +1,22 @@
+.role button {
+    background-color: transparent;
+    color: #ff0000;
+    border: none;
+    border-radius: 50%;
+    width: 15px;
+    height: 15px;
+    line-height: 15px;
+    text-align: center;
+    font-size: 14px;
+    padding: 0;
+    cursor: pointer;
+    outline: none;
+}
+
+.role button:hover {
+    background-color: transparent;
+}
+
+.role {
+    transition: all 0.5s ease;
+}

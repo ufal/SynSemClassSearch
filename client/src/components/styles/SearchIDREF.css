@@ -1,0 +1,42 @@
+.search-container-idref {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    }
+    
+    .search-input {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 2px;
+    }
+    
+    .search-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #4CAF50;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 2px;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+    margin-left: 10px;
+    }
+    
+    .search-button:hover {
+    background-color: #3e8e41;
+    }
+    
+    .search-button i {
+    margin-right: 5px;
+    }
+    
+    .filters-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
