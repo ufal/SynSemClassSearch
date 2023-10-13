@@ -5,3 +5,4 @@ server/add_links_into_data.py
 server/create_index.py
 server/links_xml_to_json.py
 server/update_repo.sh
+server/insert_roles.py
