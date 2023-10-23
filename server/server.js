@@ -16,10 +16,20 @@ const https = require('https');
 const fs = require('fs');
 const cors = require('cors');
 
+require('dotenv').config();
+
+
 app.use(cors());
 
-const getEnvVariable = (prodValue, devValue) => process.env.ENV === 'production' ? prodValue : devValue;
-let _DB_NAME = getEnvVariable("synsemclass", "mydb");
+const BASE_PATH = process.env.BASE_PATH || '/';
+const isProduction = process.env.NODE_ENV === 'production';
+const isQuest = process.env.QUEST === 'TRUE'; // on quest HTTPS is used...
+const isLocal = process.env.IS_LOCAL === 'TRUE';
+
+const getEnvVariable = (prodValue, devValue) => isProduction ? prodValue : devValue;
+
+// Database configuration
+const _DB_NAME = getEnvVariable("synsemclass", "mydb");
 
 mongoose.set('strictQuery', true);
 mongoose.connect(`mongodb://127.0.0.1:27017/${_DB_NAME}`, {useNewUrlParser: true}); //synsemclass
@@ -306,6 +316,11 @@ const getAllShortLabels = async () => {
 // Set up routes
 const router = express.Router();
 
+// Serve static files from the React app
+// app.use(express.static(path.join(__dirname, '..', 'client', 'build')));
+app.use(BASE_PATH, express.static(path.join(__dirname, '..', 'client', 'build')));
+
+
 /// request to get roles list
 router.get('/api/shortlabels', async (req, res) => {
     try {
@@ -542,8 +557,34 @@ router.get("/api/search", function (req, res) {
     });
     
 
+// // Include lindat-common header and footer
+// app.get('/header', (req, res) => {
+//     fs.readFile(path.join(__dirname, '..', 'client', 'public', 'lindat-common', 'header.htm'), 'utf8', (err, data) => {
+//         if (err) {
+//         res.status(500).send('An error occurred while reading the header file.');
+//         } else {
+//         res.send(data);
+//         }
+//     });
+// });
+
+// app.get('/footer', (req, res) => {
+//     fs.readFile(path.join(__dirname, '..', 'client', 'public', 'lindat-common', 'footer.htm'), 'utf8', (err, data) => {
+//         if (err) {
+//         res.status(500).send('An error occurred while reading the footer file.');
+//         } else {
+//         res.send(data);
+//         }
+//     });
+// });
+
+app.get('/', (req, res) => {
+    res.send('Hello World!');
+});
+
+
 // Include lindat-common header and footer
-app.get('/header', (req, res) => {
+app.get(`${BASE_PATH}header`, (req, res) => {
     fs.readFile(path.join(__dirname, '..', 'client', 'public', 'lindat-common', 'header.htm'), 'utf8', (err, data) => {
         if (err) {
         res.status(500).send('An error occurred while reading the header file.');
@@ -553,7 +594,7 @@ app.get('/header', (req, res) => {
     });
 });
 
-app.get('/footer', (req, res) => {
+app.get(`${BASE_PATH}footer`, (req, res) => {
     fs.readFile(path.join(__dirname, '..', 'client', 'public', 'lindat-common', 'footer.htm'), 'utf8', (err, data) => {
         if (err) {
         res.status(500).send('An error occurred while reading the footer file.');
@@ -564,32 +605,45 @@ app.get('/footer', (req, res) => {
 });
 
 // Mount routes to the main application middleware stack
-app.use('/', router);
 
-// Serve static files from the React app
-app.use(express.static(path.join(__dirname, '..', 'client', 'build')));
+// app.use('/', router);
+app.use(BASE_PATH, router);
 
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).send({ error: 'Internal Server Error' });
 });
 
-
 // Catch all requests and serve the React app
-app.get('*', (req, res) => {
+app.get(`${BASE_PATH}*`, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'client', 'build', 'index.html'));
 });
 
 const port = process.env.PORT || 3000;
 
-const httpsOptions = {
-    key: fs.readFileSync(path.join(__dirname, 'key.pem')),
-    cert: fs.readFileSync(path.join(__dirname, 'cert.pem')),
+// Server configurations
+let serverConfig = {
+    httpsOptions: null,
+    host: isLocal ? 'localhost' : '10.10.51.118', 
 };
 
-let listener = getEnvVariable(
-    () => https.createServer(httpsOptions, app).listen(port, '10.10.51.118', () => console.log(`Server started on port ${port}`)),
-    () => app.listen(port, () => console.log(`Server started on port ${port}`))
-);
+if (isQuest) {
+    try {
+        serverConfig.httpsOptions = {
+            key: fs.readFileSync(path.join(__dirname, 'key.pem')),
+            cert: fs.readFileSync(path.join(__dirname, 'cert.pem')),
+        };
 
-listener();
+        https.createServer(serverConfig.httpsOptions, app).listen(port, serverConfig.host, () => {
+            console.log(`HTTPS server started on ${serverConfig.host}:${port}`);
+        });
+    } catch (error) {
+        console.error("Error reading SSL certificate or key:", error.message);
+        process.exit(1); 
+    }
+} else {
+    app.listen(port, serverConfig.host, () => {
+        console.log(`HTTP server started on ${serverConfig.host}:${port}`);
+    });
+}
+
