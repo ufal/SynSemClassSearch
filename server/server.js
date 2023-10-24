@@ -317,9 +317,7 @@ const getAllShortLabels = async () => {
 const router = express.Router();
 
 // Serve static files from the React app
-// app.use(express.static(path.join(__dirname, '..', 'client', 'build')));
 app.use(BASE_PATH, express.static(path.join(__dirname, '..', 'client', 'build')));
-
 
 /// request to get roles list
 router.get('/api/shortlabels', async (req, res) => {
@@ -556,33 +554,6 @@ router.get("/api/search", function (req, res) {
     
     });
     
-
-// // Include lindat-common header and footer
-// app.get('/header', (req, res) => {
-//     fs.readFile(path.join(__dirname, '..', 'client', 'public', 'lindat-common', 'header.htm'), 'utf8', (err, data) => {
-//         if (err) {
-//         res.status(500).send('An error occurred while reading the header file.');
-//         } else {
-//         res.send(data);
-//         }
-//     });
-// });
-
-// app.get('/footer', (req, res) => {
-//     fs.readFile(path.join(__dirname, '..', 'client', 'public', 'lindat-common', 'footer.htm'), 'utf8', (err, data) => {
-//         if (err) {
-//         res.status(500).send('An error occurred while reading the footer file.');
-//         } else {
-//         res.send(data);
-//         }
-//     });
-// });
-
-app.get('/', (req, res) => {
-    res.send('Hello World!');
-});
-
-
 // Include lindat-common header and footer
 app.get(`${BASE_PATH}header`, (req, res) => {
     fs.readFile(path.join(__dirname, '..', 'client', 'public', 'lindat-common', 'header.htm'), 'utf8', (err, data) => {
@@ -605,8 +576,6 @@ app.get(`${BASE_PATH}footer`, (req, res) => {
 });
 
 // Mount routes to the main application middleware stack
-
-// app.use('/', router);
 app.use(BASE_PATH, router);
 
 app.use((err, req, res, next) => {
