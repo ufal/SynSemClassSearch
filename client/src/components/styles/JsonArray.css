@@ -323,7 +323,7 @@ a .class-common-id {
 a.common-link.topID {
     display: inline-block;
     margin: 10px;
-    margin-bottom: 3px;
+    margin-bottom: 0px;
     margin-left: 20px;
     font-weight: 500;
     color: #000000; 
@@ -355,4 +355,48 @@ a.common-link:visited {
     color: #007BFF;
     transform: scale(1.02);
     transition: color 0.3s ease, transform 0.1s ease;
+}
+
+.show-all, .copy-roles {
+    background-color: #f1f1f1;
+    border: none;
+    color: black;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 12px;
+    margin: 5px 20px;
+    padding: 5px 7px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.show-all:hover {
+    background-color: #e6e6e6; 
+    border-color: #bbb; 
+}
+
+.show-all:focus {
+    outline: none; 
+    box-shadow: 0 0 0 2px rgba(0,123,255,.25);
+}
+
+.classID-group {
+    display: flex;
+    flex-direction: column; 
+    align-items: flex-start; 
+}
+
+
+.copy-action-text {
+    display: none;
+    color: #676767;
+    font-size: 10pt;
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+.roles-block-container:hover .copy-action-text {
+    display: inline;
 }

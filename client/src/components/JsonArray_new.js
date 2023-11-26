@@ -7,7 +7,16 @@ import './styles/JsonTree.css';
 import engIcon from './icons/english-flag.png';
 import cesIcon from './icons/czech-flag.png';
 import deuIcon from './icons/german-flag.png';
+import spaIcon from './icons/spanish-flag.png';
 import { useLocation } from 'react-router-dom';
+
+<link 
+    rel="stylesheet" 
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" 
+    integrity="sha384-DyZuuL25t9l0CUcjz78Y0ByJAX+Uq+8FjI/6Bz7Ry6I5Pm3eK9FJzLt3f8BJ4Y3w" 
+    crossorigin="anonymous"
+    />
+
 
 
 function getFlag(lang) {
@@ -18,12 +27,15 @@ function getFlag(lang) {
             return cesIcon;
         case "deu":
             return deuIcon;
+        case "spa":
+            return spaIcon
         default:
             return null;
     }
 }
 
-function JsonArray({ data, currentPage }) {
+
+function JsonArray({ data, currentPage, onFetchClassMembers, onFillRolesInQuery }) {
     const mobileIndent = window.innerWidth <= 768;
     // const [expandedItems, setExpandedItems] = useState([]);
     const [expandedItems, setExpandedItems] = useState([]);
@@ -103,6 +115,7 @@ function JsonArray({ data, currentPage }) {
         <div className="accordion">
             {data && Object.entries(data).map(([id, itemList], index) => (
                 <div key={index} className="groupbyID">
+                    <div className='classID-group'>
                     <a className="common-link topID" href={`https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${id}`} target="_blank" rel="noopener noreferrer">
                         <span className="classID">
                             class ID: {id}
@@ -111,10 +124,23 @@ function JsonArray({ data, currentPage }) {
                             </span>
                         </span>
                     </a>
-                    <div className='roles-block'>
-                        <span className='roles-title'>roles:</span>
-                        <span className='roles-list'>{itemList[0]["roles"].join(', ')}</span>
+                    <button className='show-all' onClick={() => onFetchClassMembers(id)}>
+                        Show all class members in the given class
+                    </button>
                     </div>
+                    <div 
+                        className='roles-block-container' 
+                        onClick={() => onFillRolesInQuery(itemList[0]["roles"])}
+                    >
+                        <div className='roles-block'>
+                            <span className='roles-title'>roles:</span>
+                            <span className='roles-list'>{itemList[0]["roles"].join(', ')}</span>
+                            <span className='copy-action-text'> &lt;-- Click to copy into query</span>
+                        </div>
+                    </div>
+
+
+
                     {itemList.map((classItem, classIndex) => {
                         const itemKey = `${index}-${classIndex}`;
                         return (

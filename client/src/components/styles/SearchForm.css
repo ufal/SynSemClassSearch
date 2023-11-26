@@ -11,32 +11,29 @@
     flex: 1;
 }
 
-.mobile-query-view {
-    display: none; /* Hidden by default */
+.final-query-view {
     align-items: center;
     margin-top: 8px;
+    display: flex;
+    justify-content: center;
+}
+
+.content-wrapper {
+    background-color: #deefd2;
+    align-items: center;
+    font-weight: 500;
+    font-size: 16pt;
+}
+
+.final-query-view .content-wrapper .final-query {
+    padding: 10px;
+    margin: 0px;
+    justify-content: center;
 }
 
 @media (max-width: 768px) {
     .search-container {
         flex-direction: column;
-    }
-    .mobile-query-view {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .content-wrapper {
-        background-color: #deefd2;
-        align-items: center;
-        font-weight: 500;
-        font-size: 14pt;
-    }
-
-    .mobile-query-view .content-wrapper .final-query {
-        margin: 0px;
-        justify-content: center;
     }
 
     .clauses-container .clause {
@@ -275,7 +272,8 @@ input:-webkit-autofill:focus {
 
 .clauses-container .clause {
     display: flex;
-    margin-right: 10px;
+    flex-direction: column;
+    /* margin-right: 10px; */
     transition: all 0.5s ease;
 }
 
@@ -316,8 +314,9 @@ input:-webkit-autofill:focus {
 
 .roles-dropdown {
     display: flex;
+    flex-direction: column;
     flex-wrap: wrap;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
     gap: 10px;
 }
@@ -336,4 +335,48 @@ input:-webkit-autofill:focus {
 
 .resultsText {
     margin-bottom: 0;
+}
+
+.db-selection-container {
+    text-align: center;
+    margin: 0px 0;
+}
+
+.db-selection-label {
+    margin: 0 10px;
+    color: #676767;
+}
+
+.role-select {
+    width: 150px;
+}
+
+.query-constructor{
+    margin-top: 0;
+    font-size: 8pt;
+    color: #676767;
+}
+
+.query-constructor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.clear-roles-query {
+    margin-top: 0;
+    margin-bottom: 5px;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 8pt;
+    color: #676767;
+}
+
+.clear-roles-query:hover {
+    text-decoration: none;
+    color: #555;
 }

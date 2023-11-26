@@ -18,6 +18,8 @@ function useQuery() {
 }
 
 const SearchForm = () => {
+  const [selectedVersion, setSelectedVersion] = useState('synsemclass5.0');
+
   const urlQuery = useQuery();
   const [query, setQuery] = useState('');
   const [idRefQuery, setIdRefQuery] = useState('');
@@ -30,11 +32,13 @@ const SearchForm = () => {
   const [showNoResults, setShowNoResults] = useState(false);
   const [roleOptions, setroleOptions] = useState([]);
 
+  const [restrictRolesSearch, setrestrictRolesSearch] = useState(false); // restrict the search only for the roles entered in the query
+
   const [role, setRole] = useState('');
   const [roles, setRoles] = useState([]);
   const [clauses, setClauses] = useState([]);
 
-  const pageSize = 3; 
+  const pageSize = 5; 
   const [currentPage, setCurrentPage] = useState(0);
   const [pagedResults, setPagedResults] = useState([]);
   const [pageCount, setPageCount] = useState(0); 
@@ -94,7 +98,7 @@ const SearchForm = () => {
 }
 
   useEffect(() => {
-    if (!urlQuery.get('lemma') && !urlQuery.get('idRef') && !urlQuery.get('classID') && !urlQuery.get('filters') && !urlQuery.get('roles_cnf')) {
+    if (!urlQuery.get('lemma') && !urlQuery.get('idRef') && !urlQuery.get('classID') && !urlQuery.get('filters') && !urlQuery.get('roles_cnf') && !urlQuery.get('version')) {
       return;
     }
     async function fetchResultsFromUrl() {
@@ -104,13 +108,16 @@ const SearchForm = () => {
           idRef: urlQuery.get('idRef'),
           classID: urlQuery.get('classID'),
           filters: urlQuery.get('filters'),
-          roles_cnf: urlQuery.get('roles_cnf')
+          roles_cnf: urlQuery.get('roles_cnf'),
+          version: urlQuery.get('version'),
+          restrictRolesSearch: urlQuery.get('restrictRolesSearch')
         },
       });
 
       setIsLoading(false);
       // setResults(response.data.results);
       setResults(response.data.pages);
+
 
       setResultsClassesCount(response.data.uniqueCommonIdCount);
       setClassMembersCount(response.data.totalClassMembers)
@@ -146,7 +153,9 @@ const SearchForm = () => {
         idRef: idRefQuery,
         classID: classIDQuery,
         filters: filters.join(","),
-        roles_cnf: cnfString
+        roles_cnf: cnfString,
+        version: selectedVersion,
+        restrictRolesSearch: restrictRolesSearch
       },
     });
 
@@ -166,6 +175,48 @@ const SearchForm = () => {
     // Reset the current page to 0 whenever a new search is made
     setCurrentPage(0);
   };
+
+  const handleFetchClassMembers = async (classID) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/search`, {
+            params: {
+              lemma: '',
+              idRef: '',
+              classID: classID,
+              filters: [],
+              roles_cnf: null,
+              version: selectedVersion,
+              restrictRolesSearch: false
+            },
+        });
+        // Update the results state with the new data
+        setIsLoading(false);
+      // setResults(response.data.results);
+      setResults(response.data.pages);
+
+      setResultsClassesCount(response.data.uniqueCommonIdCount);
+      setClassMembersCount(response.data.totalClassMembers)
+
+      setLangCounts(response.data.langCounts);
+      setShowNoResults(response.data.pages.length === 0);
+
+
+      // Reset the current page to 0 whenever a new search is made
+      setCurrentPage(0);
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+};
+
+  const handleFillRolesInQuery = (roles) => {
+    const newClauses = roles.map((role, index) => ({ 
+      id: role + index, // Combining role and index to create a unique ID
+      roles: [role] 
+    }));
+    setClauses(newClauses);
+  };
+
+
   
   const handleChange = (event) => {
     setQuery(event.target.value);
@@ -204,6 +255,8 @@ const SearchForm = () => {
         setRoles((prevRoles) => prevRoles.filter(role => role !== selectedRole));
       }
     }
+
+    setRole('');
   };  
 
   const removeRole = (roleToRemove) => {
@@ -269,10 +322,36 @@ const SearchForm = () => {
     eng: 'English',
     cz: 'Czech',
     deu: 'German',
+    spa: 'Spanish'
 };
 
   return (
     <div>
+
+    <div className="db-selection-container">
+    <label className="db-selection-label">
+        <input
+          type="radio"
+          value="synsemclass5.0"
+          className="db-selection-radio"
+          checked={selectedVersion === 'synsemclass5.0'}
+          onChange={() => setSelectedVersion('synsemclass5.0')}
+        />
+        synsemclass5.0
+      </label>
+      <label className="db-selection-label">
+        <input
+          type="radio"
+          value="synsemclass4.0"
+          className="db-selection-radio"
+          checked={selectedVersion === 'synsemclass4.0'}
+          onChange={() => setSelectedVersion('synsemclass4.0')}
+        />
+        synsemclass4.0
+      </label>
+    </div>
+
+      
       <div className="filters-container">
         <p>Filter languages</p>
         <label>
@@ -287,6 +366,12 @@ const SearchForm = () => {
             <input type="checkbox" value="deu" onChange={handleFilterChange} />
             German
         </label>
+        {selectedVersion === 'synsemclass5.0' && (
+          <label>
+              <input type="checkbox" value="spa" onChange={handleFilterChange} />
+              Spanish
+          </label>
+        )}
       </div>
 
         <form onSubmit={handleSubmit}>
@@ -331,65 +416,91 @@ const SearchForm = () => {
             </button>    
         </div>
 
-        <DndProvider backend={HTML5Backend}>
-      <div>
+        <div>
         <div className='role-filter-container'>
-        <p>Role(s) search:</p>
+          <p>Role(s) search:</p>
           <div className='roles-dropdown'>
-          <div className='instructions'>
-          <p>Construct roles query in Conjunctive Normal Form,</p>
-          <p className='instructions example'>e.g., (Role1 OR Role2) AND (Role3 OR Role4) AND (Role5)</p>
-          <p className='desktop-view-description'>Select the role(s), drag and drop selected roles into the clauses brackets or between them.</p>
-          <p className='mobile-view-description'>For mobile view, select the role; if needed, add more clauses and select more roles within each clause.</p>
+            <div className='instructions'>
+            <p>Construct roles query in Conjunctive Normal Form,</p>
+            <p className='instructions example'>e.g., (Role1 OR Role2) AND (Role3 OR Role4) AND (Role5)</p>
+            {/* <p className='desktop-view-description'>Select the role(s), drag and drop selected roles into the clauses brackets or between them.</p> */}
+            <p className='description'>Select the role; if needed, select more roles within the clause (roles connected by OR), add more clauses (AND) and more roles within.</p>
+            <p>If you want to search for results that have only the selected role(s), and no other roles, use the checkbox to restrict the search.</p>
+            <p>Final query is displayed below highlighted in green.</p>
+            </div>
+            <div className="restrict-search-container">
+            <label>
+              <input
+                type="checkbox"
+                checked={restrictRolesSearch}
+                onChange={(e) => setrestrictRolesSearch(e.target.checked)}
+              />
+              Restrict search only to these roles
+            </label>
           </div>
-          <Select
-            className="role-select"
-            value={selectOptions.find((option) => option.value === role) || ''}
-            options={selectOptions}
-            onChange={handleRoleChange}
-            placeholder="Select a role"
-          />
-          <div className='clauses-container-button'>
-            <button type="button" onClick={addClause}>
-              Add AND operator
-            </button>
-          </div>
+            {clauses.length === 0 && (
+              <Select
+                className="role-select"
+                value={selectOptions.find((option) => option.value === role) || ''}
+                options={selectOptions}
+                onChange={handleRoleChange}
+                placeholder="Select a role"
+              />
+            )}
+
+            {clauses.length > 0 && (
+                <button type="button" onClick={addClause}>
+                  Add AND operator
+                </button>
+              )}
           </div>
         </div>
 
-
-        <div className='roles-container'>
-          {roles.map((role, index) => (
-            <Role key={index} role={role} onRemoveRole={() => removeRole(role)} showOR={false}/>
-          ))}
-        </div>
         {clauses.length > 0 && (
-                    <div className='clauses-container'>
-                    <div className='clause'>
-                      {clauses.map((clause, index) => (
-                        <Clause
-                          key={index}
-                          id={clause.id}
-                          roles={clause.roles}
-                          onAddRole={addRoleToClause}
-                          onRemoveRole={removeRoleFromClause}
-                          removeClause={() => removeClause(clause.id)}
-                          isLastClause={clause.id === clauses.length - 1}
-                          selectOptions={selectOptions}
-                        />
-                      ))}
-                    </div>
-                    </div>
-        )}
-      </div>
-    </DndProvider>
+        <div className='clauses-container'>
+          <div className='query-constructor-header'>
+            <p className='query-constructor'>Query Constructor</p>
+            <button 
+                type="button" 
+                className="clear-roles-query" 
+                onClick={() => setClauses([])}
+            >
+                Clear query
+            </button>
+        </div>
+          <div className='clause'>
+                {clauses.map((clause, index) => {
+                const isLastClause = index === clauses.length - 1;
 
-    {/* Mobile View: Displaying Query String */}
-    <div className="mobile-query-view">
+                return (
+                  <Clause
+                  key={clause.uniqueId}
+                  id={clause.id}
+                  roles={clause.roles}
+                  onAddRole={addRoleToClause}
+                  onRemoveRole={removeRoleFromClause}
+                  removeClause={() => removeClause(clause.id)}
+                  isLastClause={isLastClause}
+                  selectOptions={selectOptions}
+                />
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+
+      </div>
+
+    {/*Showing Final Query below*/}
+    
+    {clauses.length > 0 && (
+    <div className="final-query-view">
       <div className="content-wrapper">
         <p className="final-query">{getReadableQuery()}</p>
       </div>
     </div>
+    )}
 
 
 
@@ -439,7 +550,14 @@ const SearchForm = () => {
           forcePage={currentPage}
         />
       )}
-      <JsonArray data={results[currentPage]} currentPage={currentPage} />
+      <JsonArray 
+        data={results[currentPage]} 
+        currentPage={currentPage} 
+        onFetchClassMembers={handleFetchClassMembers}
+        onFillRolesInQuery={handleFillRolesInQuery} // Passing the callback
+      />
+
+
       {results.length > 1 && (
         <ReactPaginate
           previousLabel={"previous"}

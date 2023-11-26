@@ -18,7 +18,6 @@ const cors = require('cors');
 
 require('dotenv').config();
 
-
 app.use(cors());
 
 const BASE_PATH = process.env.BASE_PATH || '/';
@@ -32,10 +31,17 @@ const getEnvVariable = (prodValue, devValue) => isProduction ? prodValue : devVa
 const _DB_NAME = getEnvVariable("synsemclass", "mydb");
 
 mongoose.set('strictQuery', true);
-mongoose.connect(`mongodb://127.0.0.1:27017/${_DB_NAME}`, {useNewUrlParser: true}); //synsemclass
-const connection = mongoose.connection;
-connection.once('open', () => {
-    console.log('MongoDB database connection established successfully');
+// mongoose.connect(`mongodb://127.0.0.1:27017/${_DB_NAME}`, {useNewUrlParser: true}); //synsemclass
+
+const dbConnection1 = mongoose.createConnection(`mongodb://127.0.0.1:27017/${_DB_NAME}`, { useNewUrlParser: true});
+const dbConnection2 = mongoose.createConnection(`mongodb://127.0.0.1:27017/${_DB_NAME}5`, { useNewUrlParser: true});
+
+dbConnection1.once('open', () => {
+    console.log('MongoDB database connection established successfully for synsemclass4.0');
+});
+
+dbConnection2.once('open', () => {
+    console.log('MongoDB database connection established successfully  for synsemclass5.0');
 });
 
 const classMemberSchema = {
@@ -135,16 +141,31 @@ const linksSchema = {
 }
 
 // const ClassMember = mongoose.model("classmember", classMemberSchema);
-const ClassMember = mongoose.model("englishlangmember", classMemberSchema);
-const ClassMemberCz = mongoose.model("czechlangmember", classMemberSchema);
-const ClassMemberDeu = mongoose.model("germanlangmember", classMemberSchema);
+// SynSemClass4.0 collections:
+const ClassMember = dbConnection1.model("englishlangmember", classMemberSchema);
+const ClassMemberCz = dbConnection1.model("czechlangmember", classMemberSchema);
+const ClassMemberDeu = dbConnection1.model("germanlangmember", classMemberSchema);
 
-const Roles = mongoose.model("role", rolesSchema);
-const Veclass_Roles = mongoose.model("veclass_role", veclass_rolesSchema);
+const Roles = dbConnection1.model("role", rolesSchema);
+const Veclass_Roles = dbConnection1.model("veclass_role", veclass_rolesSchema);
 
-const Links_eng = mongoose.model("eng_reflexicon", linksSchema);
-const Links_ces = mongoose.model("ces_reflexicon", linksSchema);
-const Links_deu = mongoose.model("deu_reflexicon", linksSchema);
+const Links_eng = dbConnection1.model("eng_reflexicon", linksSchema);
+const Links_ces = dbConnection1.model("ces_reflexicon", linksSchema);
+const Links_deu = dbConnection1.model("deu_reflexicon", linksSchema);
+
+// SynSemClass5.0 collections:
+const ClassMember5 = dbConnection2.model("englishlangmember", classMemberSchema);
+const ClassMemberCz5 = dbConnection2.model("czechlangmember", classMemberSchema);
+const ClassMemberDeu5 = dbConnection2.model("germanlangmember", classMemberSchema);
+const ClassMemberSpa5 = dbConnection2.model("spanishlangmember", classMemberSchema);
+
+const Roles5 = dbConnection2.model("role", rolesSchema);
+const Veclass_Roles5 = dbConnection2.model("veclass_role", veclass_rolesSchema);
+
+const Links_eng5 = dbConnection2.model("eng_reflexicon", linksSchema);
+const Links_ces5 = dbConnection2.model("ces_reflexicon", linksSchema);
+const Links_deu5 = dbConnection2.model("deu_reflexicon", linksSchema);
+const Links_spa5 = dbConnection2.model("spa_reflexicon", linksSchema);
 
 // Deprecated functions; no need since the database was updated to contain the roles
 const findRoleIdsByShortLabel = async (roles) => {
@@ -207,7 +228,7 @@ const findVeclassIdsByRoleIds = async (roleIds, roleOperators) => {
 };
 
 // Main query search function that combines all search options together
-const findDocuments = async (input, idRef, classID, clauses, collection) => {
+const findDocuments = async (input, idRef, classID, clauses, restrictRolesSearch, collection) => {
     // Retrieve the list of valid Veclass_Roles documents that have their @status NOT in ["merged", "deleted"].
     const validVeclassIds = (await Veclass_Roles.find({ "@status": { $nin: ["merged", "deleted"] } }).select("@id")).map(veclass => veclass["@id"]);
 
@@ -275,13 +296,26 @@ const findDocuments = async (input, idRef, classID, clauses, collection) => {
     //     matchConditions.push({ $and: clauseConditions });
     // }
 
+
     if (clauses) {
         const clauseConditions = clauses.map(clause => {
             const clauseCondition = clause.map(role => ({ '@roles': role }));
             return { $or: clauseCondition };
         });
     
-        matchConditions.push({ $and: clauseConditions });
+        if (restrictRolesSearch) {
+            console.log("restrictRolesSearch set to", restrictRolesSearch);
+            // When restricting the search, ensure that the document has only the specified roles
+            matchConditions.push({ 
+                $and: [
+                    { $and: clauseConditions },
+                    { '@roles': { $size: clauses.flat().length } }
+                ]
+            });
+        } else {
+            // Unrestricted search
+            matchConditions.push({ $and: clauseConditions });
+        }
     }
     
 
@@ -336,25 +370,46 @@ router.get('/api/shortlabels', async (req, res) => {
 router.post('/api/batch-links', async (req, res) => {
     const idrefs = req.body.idrefs;
     const lang = req.body.lang;
+    const version = req.body.version;
 
-    if (!idrefs || !lang) {
+    if (!idrefs || !lang || !version) {
         return res.status(400).json({ error: 'Invalid input data.' });
     }
     
-    // choose the correct model based on the language
     let Model;
-    switch (lang) {
-        case "eng":
-            Model = Links_eng;
+    switch (version) {
+        case "synsemclass4.0":
+            switch (lang) {
+                case "eng":
+                    Model = Links_eng;
+                    break;
+                case "ces":
+                    Model = Links_ces;
+                    break;
+                case "deu":
+                    Model = Links_deu;
+                    break;
+            }
             break;
-        case "ces":
-            Model = Links_ces;
-            break;
-        case "deu":
-            Model = Links_deu;
+        case "synsemclass5.0":
+            switch (lang) {
+                case "eng":
+                    Model = Links_eng5;
+                    break;
+                case "ces":
+                    Model = Links_ces5;
+                    break;
+                case "deu":
+                    Model = Links_deu5;
+                    break;
+                case "spa":
+                    Model = Links_spa5;
+                    break;
+            }
             break;
     }
 
+    
     if (Model) {
         const data = await Model.find({"@id": { $in: idrefs }});
         const links = {};
@@ -374,6 +429,9 @@ router.post('/api/batch-links', async (req, res) => {
 //main API GET route
 router.get("/api/search", function (req, res) {
     console.log("QUERY", req.query);
+
+    const version = req.query.version;
+    const restrictRolesSearch = req.query.restrictRolesSearch === 'true';
 
     const query = req.query.lemma;
     const idRef = req.query.idRef;
@@ -431,30 +489,41 @@ router.get("/api/search", function (req, res) {
     console.log("idRef:", idRef);
     console.log("classID:", classID);
     console.log("filters:", filters);
+    console.log("selected version:", version);
+    console.log("restrictRolesSearch:", restrictRolesSearch);
 
     if (!query && !idRef && !classID && filters.length === 0 && clauses.length === 0) {
         return res.json([]);
     }
 
-    const collections = {
-        eng: ClassMember, 
-        cz: ClassMemberCz, 
+    const collections_v4 = {
+        eng: ClassMember,
+        cz: ClassMemberCz,
         deu: ClassMemberDeu
     };
+    
+    const collections_v5 = {
+        eng: ClassMember5,
+        cz: ClassMemberCz5,
+        deu: ClassMemberDeu5,
+        spa: ClassMemberSpa5
+    };
+    
+    const collections = version === 'synsemclass5.0' ? collections_v5 : collections_v4;
     
     const searchFunctions = [];
     
     for (const filterValue of filters) {
         if (collections[filterValue]) {
-            searchFunctions.push(() => findDocuments(query, idRef, classID, clauses, collections[filterValue])
-            .then(result => ({...result, language: filterValue})));  // Include language here
+            searchFunctions.push(() => findDocuments(query, idRef, classID, clauses, restrictRolesSearch, collections[filterValue])
+            .then(result => ({...result, language: filterValue}))); 
         }
     }
     
     if (filters.length === 0) {
         Object.keys(collections).forEach(language => {
-            searchFunctions.push(() => findDocuments(query, idRef, classID, clauses, collections[language])
-            .then(result => ({...result, language})));  // Include language here
+            searchFunctions.push(() => findDocuments(query, idRef, classID, clauses, restrictRolesSearch, collections[language])
+            .then(result => ({...result, language})));  
         });
     }
 

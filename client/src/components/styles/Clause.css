@@ -7,15 +7,18 @@
 
 .bracket-closing {
     margin-left: 10px;
+    font-size: 16pt;
 }
 
 .bracket-opening {
     margin-left: 0;
     margin-right: 15px;
+    font-size: 16pt;
 }
 
 .roles-container {
     display: flex;
+    font-size: 14pt;
 }
 
 .brackets {
@@ -52,8 +55,9 @@
 }
 
 .role-selector {
+    align-items: center;
     background-color: white;
-    max-width: fit-content;
+    max-width: 200px;
     padding: 0px;
     margin-right: 8px;
     border-radius: 4px;
