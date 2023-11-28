@@ -35,7 +35,7 @@ function getFlag(lang) {
 }
 
 
-function JsonArray({ data, currentPage, onFetchClassMembers, onFillRolesInQuery }) {
+function JsonArray({ data, currentPage, onFetchClassMembers, onFillRolesInQuery, version }) {
     const mobileIndent = window.innerWidth <= 768;
     // const [expandedItems, setExpandedItems] = useState([]);
     const [expandedItems, setExpandedItems] = useState([]);
@@ -116,7 +116,9 @@ function JsonArray({ data, currentPage, onFetchClassMembers, onFillRolesInQuery 
             {data && Object.entries(data).map(([id, itemList], index) => (
                 <div key={index} className="groupbyID">
                     <div className='classID-group'>
-                    <a className="common-link topID" href={`https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${id}`} target="_blank" rel="noopener noreferrer">
+                    <a className="common-link topID" href={version === "synsemclass4.0" 
+        ? `https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${id}`
+        : `https://quest.ms.mff.cuni.cz/ef-test/SynSemClass50.html?veclass=${id}`} target="_blank" rel="noopener noreferrer">
                         <span className="classID">
                             class ID: {id}
                             <span className="copy-icon-wrapper">
@@ -146,7 +148,9 @@ function JsonArray({ data, currentPage, onFetchClassMembers, onFillRolesInQuery 
                         return (
                             <div key={itemKey} className="accordion-item">
                                 <div className="accordion-header">
-                                    <a className="common-link" href={`https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${id}`} target="_blank" rel="noopener noreferrer">
+                                    <a className="common-link" href={version === "synsemclass4.0"? 
+                                    `https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${id}`
+                                    : `https://quest.ms.mff.cuni.cz/ef-test/SynSemClass50.html?veclass=${id}`} target="_blank" rel="noopener noreferrer">
                                         <div className="flag">
                                         <img src={getFlag(classItem.classMembers[0]["@lang"])} alt="" />
                                         </div>
@@ -158,7 +162,9 @@ function JsonArray({ data, currentPage, onFetchClassMembers, onFillRolesInQuery 
                                     <div className='classmember-block'>
                                         <span className='classmember-count'>{classItem.classMembers.length} class member(s): </span>
                                         {!expandedItems.includes(itemKey) && classItem.classMembers.slice(0, 2).map((member, i) => (
-                                            <a key={i} className="item-info" href={`https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${id}#${member["@id"]}`} target="_blank" rel="noopener noreferrer">
+                                            <a key={i} className="item-info" href={version === "synsemclass4.0"
+                                            ? `https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${id}#${member["@id"]}`
+                                            : `https://quest.ms.mff.cuni.cz/ef-test/SynSemClass50.html?veclass=${id}#${member["@id"]}`} target="_blank" rel="noopener noreferrer">
                                             <span className="classmember-item">{member["@lemma"]}</span>
                                             <span className='classmember-item idref'>
                                                 ({member["@idref"]})
@@ -181,7 +187,9 @@ function JsonArray({ data, currentPage, onFetchClassMembers, onFillRolesInQuery 
                                         return (
                                             <div key={memberKey} className="accordion-item classmember">
                                                 <div className="accordion-header classmember">
-                                                    <a className="item-info"  href={`https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${id}#${member["@id"]}`} target="_blank" rel="noopener noreferrer">
+                                                    <a className="item-info"  href={version === "synsemclass4.0"
+                                            ? `https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${id}#${member["@id"]}`
+                                            : `https://quest.ms.mff.cuni.cz/ef-test/SynSemClass50.html?veclass=${id}#${member["@id"]}`} target="_blank" rel="noopener noreferrer">
                                                         <span className="classmember-item">{member["@lemma"]}</span>
                                                         <span className='classmember-item idref'>
                                                             ({member["@idref"]})
@@ -212,7 +220,7 @@ function JsonArray({ data, currentPage, onFetchClassMembers, onFillRolesInQuery 
                                                     />
                                                 </div>
                                                 <div className={`accordion-content ${expandedItems.includes(memberKey) ? "expanded" : ""}`}>
-                                                    {expandedItems.includes(memberKey) && <JsonTree data={member} depth={1} mobileIndent={mobileIndent} />}
+                                                    {expandedItems.includes(memberKey) && <JsonTree data={member} depth={1} mobileIndent={mobileIndent} version={version} />}
                                                 </div>
                                             </div>
                                         );
@@ -297,17 +305,35 @@ function generateVerbNetURL(linkAttributes) {
     }
 }
 
-function constructLink(type, value, rootData, isExtlexLinkItem = false, depth = 0, linkAttributes = {}) {
+function constructLink(type, value, rootData, version, isExtlexLinkItem = false, depth = 0, linkAttributes = {}) {
     if (depth === 1) {
         // Handle top-level properties
         switch (type) {
             case LINK_TYPES.ID:
-                return `https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${value.split('-')[0]}`;
+                return version === "synsemclass4.0" 
+                ? `https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${value.split('-')[0]}`
+                : `https://quest.ms.mff.cuni.cz/ef-test/SynSemClass50.html?veclass=${value.split('-')[0]}`;
             case LINK_TYPES.LEMMA:
-                return `https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${rootData["@id"].split('-')[0]}#${rootData["@id"]}`;
+                return version === "synsemclass4.0"
+                ? `https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${rootData["@id"].split('-')[0]}#${rootData["@id"]}`
+                : `https://quest.ms.mff.cuni.cz/ef-test/SynSemClass50.html?veclass=${rootData["@id"].split('-')[0]}#${rootData["@id"]}`;
             case LINK_TYPES.IDREF:
                 if (rootData["@lexidref"] === "pdtvallex" || rootData["@lexidref"] === "engvallex") {
                     return `${rootData["lexlink"]}verb=${rootData["@lemma"]}#${value.split("ID-")[1]}`;
+                }
+                if (rootData["@lexidref"] === "ancora") { // Spanish lex
+                    let urlString = rootData["lexlink"];
+                    urlString = urlString.replace("%26", "&");
+                    let extlex = rootData.extlex;
+                    if (!Array.isArray(extlex)) {
+                        extlex = [extlex];
+                    }
+                    const ancoraItem = extlex.find(item => item["@idref"] === "ancora");
+                    if (ancoraItem) {
+                        const link = ancoraItem.links.link;
+                        const file = link["@file"];
+                        return `${urlString}${file}`
+                    } 
                 }
                 if (rootData["@lexidref"] === "gup") {
                     let extlex = rootData.extlex;
@@ -458,8 +484,8 @@ function constructLink(type, value, rootData, isExtlexLinkItem = false, depth = 
 }
 
 
-function LinkRenderer({ type, value, rootData, isExtlexLinkItem = false, depth = 0, linkAttributes = {} }) {
-    const href = constructLink(type, value, rootData, isExtlexLinkItem, depth, linkAttributes);
+function LinkRenderer({ type, value, rootData, version, isExtlexLinkItem = false, depth = 0, linkAttributes = {} }) {
+    const href = constructLink(type, value, rootData, version, isExtlexLinkItem, depth, linkAttributes);
     return (
         href !== value ? 
         <a className="jsontree-link" href={href} target="_blank" rel="noopener noreferrer">
@@ -470,10 +496,10 @@ function LinkRenderer({ type, value, rootData, isExtlexLinkItem = false, depth =
     );
 }
 
-function JsonTree({ data, depth = 0, mobileIndent = false, rootData = data, extlexIdRef = null, linkAttributes = {} }) {
+function JsonTree({ data, depth = 0, mobileIndent = false, rootData = data, version, extlexIdRef = null, linkAttributes = {} }) {
 
     function renderValue(key, value, rootData, depth, extlexIdRef = null, linkAttributes = {}) {
-        return <LinkRenderer type={key} value={value} depth={depth} rootData={rootData} 
+        return <LinkRenderer type={key} value={value} depth={depth} rootData={rootData} version={version} 
         isExtlexLinkItem={extlexIdRef === "pdtvallex" || extlexIdRef === "czengvallex" || 
         extlexIdRef === "engvallex" || extlexIdRef === "fn" || extlexIdRef === "on"
         || extlexIdRef === "wn" || extlexIdRef === "vn" || extlexIdRef === "pb" 
@@ -489,7 +515,7 @@ function JsonTree({ data, depth = 0, mobileIndent = false, rootData = data, extl
                 data.map((value, i) => (
                     <li key={i} style={{ marginLeft: mobileIndent ? depth * 10 : depth * 20 }}>
                         <span style={{ fontWeight: "bold" }}>[{i}]: </span>
-                        <JsonTree data={value} depth={depth + 1} mobileIndent={mobileIndent} rootData={rootData} extlexIdRef={extlexIdRef} linkAttributes={linkAttributes} />
+                        <JsonTree data={value} depth={depth + 1} mobileIndent={mobileIndent} rootData={rootData} version={version} extlexIdRef={extlexIdRef} linkAttributes={linkAttributes} />
                     </li>
                 )) :
                 Object.entries(data).map(([key, value]) => (
@@ -527,7 +553,8 @@ function JsonTree({ data, depth = 0, mobileIndent = false, rootData = data, extl
                                             data={item} 
                                             depth={depth + 1} 
                                             mobileIndent={mobileIndent} 
-                                            rootData={rootData} 
+                                            rootData={rootData}
+                                            version={version}
                                             extlexIdRef={item["@idref"]} 
                                             linkAttributes={item}
                                         />
@@ -537,7 +564,8 @@ function JsonTree({ data, depth = 0, mobileIndent = false, rootData = data, extl
                                         data={value} 
                                         depth={depth + 1} 
                                         mobileIndent={mobileIndent} 
-                                        rootData={rootData} 
+                                        rootData={rootData}
+                                        version={version}
                                         extlexIdRef={value["@idref"]} 
                                         linkAttributes={value}
                                     />
@@ -548,7 +576,8 @@ function JsonTree({ data, depth = 0, mobileIndent = false, rootData = data, extl
                                 data={value} 
                                 depth={depth + 1} 
                                 mobileIndent={mobileIndent} 
-                                rootData={rootData} 
+                                rootData={rootData}
+                                version={version}
                                 extlexIdRef={extlexIdRef}
                                 linkAttributes={linkAttributes}
                             />

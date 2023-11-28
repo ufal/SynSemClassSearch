@@ -557,7 +557,8 @@ const SearchForm = () => {
         data={results[currentPage]} 
         currentPage={currentPage} 
         onFetchClassMembers={handleFetchClassMembers}
-        onFillRolesInQuery={handleFillRolesInQuery} // Passing the callback
+        onFillRolesInQuery={handleFillRolesInQuery}
+        version={selectedVersion}
       />
 
 
