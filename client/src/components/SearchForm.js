@@ -18,7 +18,10 @@ function useQuery() {
 }
 
 const SearchForm = () => {
-  const [selectedVersion, setSelectedVersion] = useState('synsemclass5.0');
+  // const [selectedVersion, setSelectedVersion] = useState('synsemclass5.0');
+  const urlParams = new URLSearchParams(window.location.search);
+  const versionFromURL = urlParams.get('version');
+  const [selectedVersion, setSelectedVersion] = useState(versionFromURL || 'synsemclass5.0');
 
   const urlQuery = useQuery();
   const [query, setQuery] = useState('');
@@ -98,7 +101,7 @@ const SearchForm = () => {
 }
 
   useEffect(() => {
-    if (!urlQuery.get('lemma') && !urlQuery.get('idRef') && !urlQuery.get('classID') && !urlQuery.get('filters') && !urlQuery.get('roles_cnf') && !urlQuery.get('version')) {
+    if (!urlQuery.get('lemma') && !urlQuery.get('idRef') && !urlQuery.get('classID') && !urlQuery.get('filters') && !urlQuery.get('roles_cnf')) {
       return;
     }
     async function fetchResultsFromUrl() {
