@@ -624,7 +624,7 @@ router.get("/api/search", function (req, res) {
     });
     
 // Include lindat-common header and footer
-app.get(`${BASE_PATH}header`, (req, res) => {
+app.get(`${BASE_PATH}/header`, (req, res) => {
     fs.readFile(path.join(__dirname, '..', 'client', 'public', 'lindat-common', 'header.htm'), 'utf8', (err, data) => {
         if (err) {
         res.status(500).send('An error occurred while reading the header file.');
@@ -634,7 +634,7 @@ app.get(`${BASE_PATH}header`, (req, res) => {
     });
 });
 
-app.get(`${BASE_PATH}footer`, (req, res) => {
+app.get(`${BASE_PATH}/footer`, (req, res) => {
     fs.readFile(path.join(__dirname, '..', 'client', 'public', 'lindat-common', 'footer.htm'), 'utf8', (err, data) => {
         if (err) {
         res.status(500).send('An error occurred while reading the footer file.');
