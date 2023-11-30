@@ -118,7 +118,7 @@ function JsonArray({ data, currentPage, onFetchClassMembers, onFillRolesInQuery,
                     <div className='classID-group'>
                     <a className="common-link topID" href={version === "synsemclass4.0" 
         ? `https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${id}`
-        : `https://quest.ms.mff.cuni.cz/ef-test/SynSemClass50.html?veclass=${id}`} target="_blank" rel="noopener noreferrer">
+        : `https://lindat.mff.cuni.cz/services/SynSemClass50/SynSemClass50.html?veclass=${id}`} target="_blank" rel="noopener noreferrer">
                         <span className="classID">
                             class ID: {id}
                             <span className="copy-icon-wrapper">
@@ -150,7 +150,7 @@ function JsonArray({ data, currentPage, onFetchClassMembers, onFillRolesInQuery,
                                 <div className="accordion-header">
                                     <a className="common-link" href={version === "synsemclass4.0"? 
                                     `https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${id}`
-                                    : `https://quest.ms.mff.cuni.cz/ef-test/SynSemClass50.html?veclass=${id}`} target="_blank" rel="noopener noreferrer">
+                                    : `https://lindat.mff.cuni.cz/services/SynSemClass50/SynSemClass50.html?veclass=${id}`} target="_blank" rel="noopener noreferrer">
                                         <div className="flag">
                                         <img src={getFlag(classItem.classMembers[0]["@lang"])} alt="" />
                                         </div>
@@ -164,7 +164,7 @@ function JsonArray({ data, currentPage, onFetchClassMembers, onFillRolesInQuery,
                                         {!expandedItems.includes(itemKey) && classItem.classMembers.slice(0, 2).map((member, i) => (
                                             <a key={i} className="item-info" href={version === "synsemclass4.0"
                                             ? `https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${id}#${member["@id"]}`
-                                            : `https://quest.ms.mff.cuni.cz/ef-test/SynSemClass50.html?veclass=${id}#${member["@id"]}`} target="_blank" rel="noopener noreferrer">
+                                            : `https://lindat.mff.cuni.cz/services/SynSemClass50/SynSemClass50.html?veclass=${id}#${member["@id"]}`} target="_blank" rel="noopener noreferrer">
                                             <span className="classmember-item">{member["@lemma"]}</span>
                                             <span className='classmember-item idref'>
                                                 ({member["@idref"]})
@@ -189,7 +189,7 @@ function JsonArray({ data, currentPage, onFetchClassMembers, onFillRolesInQuery,
                                                 <div className="accordion-header classmember">
                                                     <a className="item-info"  href={version === "synsemclass4.0"
                                             ? `https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${id}#${member["@id"]}`
-                                            : `https://quest.ms.mff.cuni.cz/ef-test/SynSemClass50.html?veclass=${id}#${member["@id"]}`} target="_blank" rel="noopener noreferrer">
+                                            : `https://lindat.mff.cuni.cz/services/SynSemClass50/SynSemClass50.html?veclass=${id}#${member["@id"]}`} target="_blank" rel="noopener noreferrer">
                                                         <span className="classmember-item">{member["@lemma"]}</span>
                                                         <span className='classmember-item idref'>
                                                             ({member["@idref"]})
@@ -312,11 +312,11 @@ function constructLink(type, value, rootData, version, isExtlexLinkItem = false,
             case LINK_TYPES.ID:
                 return version === "synsemclass4.0" 
                 ? `https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${value.split('-')[0]}`
-                : `https://quest.ms.mff.cuni.cz/ef-test/SynSemClass50.html?veclass=${value.split('-')[0]}`;
+                : `https://lindat.mff.cuni.cz/services/SynSemClass50/SynSemClass50.html?veclass=${value.split('-')[0]}`;
             case LINK_TYPES.LEMMA:
                 return version === "synsemclass4.0"
                 ? `https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${rootData["@id"].split('-')[0]}#${rootData["@id"]}`
-                : `https://quest.ms.mff.cuni.cz/ef-test/SynSemClass50.html?veclass=${rootData["@id"].split('-')[0]}#${rootData["@id"]}`;
+                : `https://lindat.mff.cuni.cz/services/SynSemClass50/SynSemClass50.html?veclass=${rootData["@id"].split('-')[0]}#${rootData["@id"]}`;
             case LINK_TYPES.IDREF:
                 if (rootData["@lexidref"] === "pdtvallex" || rootData["@lexidref"] === "engvallex") {
                     return `${rootData["lexlink"]}verb=${rootData["@lemma"]}#${value.split("ID-")[1]}`;
