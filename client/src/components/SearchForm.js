@@ -12,6 +12,8 @@ import Clause from './Clause';
 import Select from "react-select";
 import { useLocation } from "react-router-dom";
 import Contact from "./Contact";
+import { Link } from 'react-router-dom';
+// import Statistics from "./Statistics";
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -22,6 +24,9 @@ const SearchForm = () => {
   const urlParams = new URLSearchParams(window.location.search);
   const versionFromURL = urlParams.get('version');
   const [selectedVersion, setSelectedVersion] = useState(versionFromURL || 'synsemclass5.0');
+
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const urlQuery = useQuery();
   const [query, setQuery] = useState('');
@@ -34,8 +39,12 @@ const SearchForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showNoResults, setShowNoResults] = useState(false);
   const [roleOptions, setroleOptions] = useState([]);
+  const [cmnoteQuery, setCmnoteQuery] = useState('');
+  const [restrictQuery, setRestrictQuery] = useState('');
 
   const [restrictRolesSearch, setrestrictRolesSearch] = useState(false); // restrict the search only for the roles entered in the query
+
+  const [diacriticsSensitive, setDiacriticsSensitive] = useState(false); // diacritics sensitive search for @lemma field
 
   const [role, setRole] = useState('');
   const [roles, setRoles] = useState([]);
@@ -101,7 +110,7 @@ const SearchForm = () => {
 }
 
   useEffect(() => {
-    if (!urlQuery.get('lemma') && !urlQuery.get('idRef') && !urlQuery.get('classID') && !urlQuery.get('filters') && !urlQuery.get('roles_cnf')) {
+    if (!urlQuery.get('lemma') && !urlQuery.get('idRef') && !urlQuery.get('classID') && !urlQuery.get('filters') && !urlQuery.get('cmnote') && !urlQuery.get('restrict') && !urlQuery.get('roles_cnf')) {
       return;
     }
     async function fetchResultsFromUrl() {
@@ -110,10 +119,13 @@ const SearchForm = () => {
           lemma: urlQuery.get('lemma'),
           idRef: urlQuery.get('idRef'),
           classID: urlQuery.get('classID'),
+          cmnote: urlQuery.get('cmnote'),
+          restrict: urlQuery.get('restrict'),
           filters: urlQuery.get('filters'),
           roles_cnf: urlQuery.get('roles_cnf'),
           version: urlQuery.get('version'),
-          restrictRolesSearch: urlQuery.get('restrictRolesSearch')
+          restrictRolesSearch: urlQuery.get('restrictRolesSearch'),
+          diacriticsSensitive: urlQuery.get('diacriticsSensitive')
         },
       });
 
@@ -144,7 +156,7 @@ const SearchForm = () => {
 
     // console.log(cnfString);
 
-    if (!query && !idRefQuery && !classIDQuery && cnf.length===0) {
+    if (!query && !idRefQuery && !classIDQuery && !cmnoteQuery && !restrictQuery && cnf.length===0) {
         console.log("Empty query.");
         setIsLoading(false);
         return;
@@ -155,10 +167,13 @@ const SearchForm = () => {
         lemma: query,
         idRef: idRefQuery,
         classID: classIDQuery,
+        cmnote: cmnoteQuery,
+        restrict: restrictQuery,
         filters: filters.join(","),
         roles_cnf: cnfString,
         version: selectedVersion,
-        restrictRolesSearch: restrictRolesSearch
+        restrictRolesSearch: restrictRolesSearch,
+        diacriticsSensitive: diacriticsSensitive
       },
     });
 
@@ -173,8 +188,7 @@ const SearchForm = () => {
 
     setLangCounts(response.data.langCounts);
     setShowNoResults(response.data.pages.length === 0);
-
-
+    
     // Reset the current page to 0 whenever a new search is made
     setCurrentPage(0);
   };
@@ -186,10 +200,13 @@ const SearchForm = () => {
               lemma: '',
               idRef: '',
               classID: classID,
+              cmnote: '',
+              restrict: '',
               filters: [],
               roles_cnf: null,
               version: selectedVersion,
-              restrictRolesSearch: false
+              restrictRolesSearch: false,
+              diacriticsSensitive: false
             },
         });
         // Update the results state with the new data
@@ -231,6 +248,14 @@ const SearchForm = () => {
 
   const handleClassIDChange = (event) => {
     setclassIDQuery(event.target.value);
+  };
+
+  const handleCmnoteChange = (event) => {
+    setCmnoteQuery(event.target.value);
+  };
+
+  const handleRestrictChange = (event) => {
+    setRestrictQuery(event.target.value);
   };
 
   const handleFilterChange = (event) => {
@@ -330,6 +355,11 @@ const SearchForm = () => {
 
   return (
     <div>
+    <div className='stats'>
+      <Link to="/statistics" state={{ selectedVersion: selectedVersion }} className='stats-link'>
+          Show Statistics
+      </Link>
+    </div>
 
     <div className="db-selection-container">
     <label className="db-selection-label">
@@ -377,6 +407,17 @@ const SearchForm = () => {
         )}
       </div>
 
+      <div className="diacritics-container">
+            <label>
+              <input
+                type="checkbox"
+                checked={diacriticsSensitive}
+                onChange={(e) => setDiacriticsSensitive(e.target.checked)}
+              />
+              Diacritics-Sensitive Search for lemma
+            </label>
+          </div>
+
         <form onSubmit={handleSubmit}>
         <div className="search-container">
           <div className="search-row">
@@ -413,11 +454,39 @@ const SearchForm = () => {
               onChange={handleClassIDChange}
             />
           </div>
+
+          <div className="search-row cmnote-row">
+            <label className="input-label" htmlFor="CmnoteInput">Cmnote search:</label>
+            <input
+              id="CmnoteInput"
+              type="text"
+              className="search-input cmnote-input"
+              placeholder="Cmnote (e.g. idiom.*)"
+              autoComplete='off'
+              value={cmnoteQuery}
+              onChange={handleCmnoteChange}
+            />
+          </div>
+
+          <div className="search-row restrict-row">
+            <label className="input-label" htmlFor="RestrictInput">Restrict field search:</label>
+            <input
+              id="RestrictInput"
+              type="text"
+              className="search-input restrict-input"
+              placeholder="Restrict field (e.g. to come across as)"
+              autoComplete='off'
+              value={restrictQuery}
+              onChange={handleRestrictChange}
+            />
+          </div>
+
           <button type="submit" className="search-button">
               <i className="fa fa-search"></i>
               <span>Search</span>
             </button>    
         </div>
+
 
         <div>
         <div className='role-filter-container'>
@@ -512,7 +581,6 @@ const SearchForm = () => {
         Clear All
       </button>
     </div>
-
 
         </form>
     

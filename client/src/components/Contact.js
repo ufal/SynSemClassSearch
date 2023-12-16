@@ -32,6 +32,9 @@ function Contact() {
                         {email}.
                         </span>
                     </p>
+                    <p>
+                        <a className='clear-link' href="https://ufal.mff.cuni.cz/synsemclass/synsemclass-search-tool" target="_blank" rel="noopener noreferrer">API guide</a>
+                    </p>
             </div>
     );
 }

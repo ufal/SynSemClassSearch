@@ -1,0 +1,35 @@
+.statistics-container {
+    padding: 20px;
+    max-width: 1000px;
+    margin: auto;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+.charts-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.chart-section {
+    flex-basis: calc(50% - 20px);
+    padding: 0;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    min-height: 400px;
+}
+
+.chart-section h3 {
+    margin-bottom: 10px;
+}
+
+@media (max-width: 768px) {
+    .chart-section {
+        flex-basis: 100%;
+    }
+}

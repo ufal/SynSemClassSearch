@@ -1,12 +1,12 @@
 .contact-info {
-    padding: 15px;
+    padding: 10px;
     text-align: center;
     bottom: 0;
     width: 100%;
 }
 
 .contact-info p {
-    margin: 0;
+    margin: 0px;
     color: #555;
 }
 
@@ -17,5 +17,18 @@
 }
 
 .email:hover {
+    text-decoration: none;
+}
+
+.clear-link {
+    background-color: transparent;
+    border: none;
+    color: #555;
+    font-size: 12pt;
+    padding: 0;
+    cursor: pointer;
+}
+
+.clear-link:hover {
     text-decoration: none;
 }

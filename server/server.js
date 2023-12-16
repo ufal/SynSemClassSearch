@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const mongoose = require('mongoose');
+const unidecode = require('unidecode');
 
 const app = express();
 
@@ -228,7 +229,7 @@ const findVeclassIdsByRoleIds = async (roleIds, roleOperators) => {
 };
 
 // Main query search function that combines all search options together
-const findDocuments = async (input, idRef, classID, clauses, restrictRolesSearch, collection) => {
+const findDocuments = async (input, idRef, classID, cmnote, restrict, clauses, restrictRolesSearch, diacriticsSensitive, collection) => {
     // Retrieve the list of valid Veclass_Roles documents that have their @status NOT in ["merged", "deleted"].
     const validVeclassIds = (await Veclass_Roles.find({ "@status": { $nin: ["merged", "deleted"] } }).select("@id")).map(veclass => veclass["@id"]);
 
@@ -273,8 +274,16 @@ const findDocuments = async (input, idRef, classID, clauses, restrictRolesSearch
     ];
 
     if (input) {
-        const inputRegex = new RegExp(`^${input}$`, "iu");
-        matchConditions.push({ "classmembers.classmember.@lemma": { $regex: inputRegex } });
+        const normalizedInput = diacriticsSensitive ? input : unidecode(input);
+        const inputRegex = new RegExp(`^${normalizedInput}$`, "iu");
+    
+        if (diacriticsSensitive) {
+            // Diacritics-sensitive search: use the @lemma field
+            matchConditions.push({ "classmembers.classmember.@lemma": { $regex: inputRegex } });
+        } else {
+            // Diacritics-insensitive search: use the normalized_lemma field
+            matchConditions.push({ "classmembers.classmember.normalized_lemma": { $regex: inputRegex } });
+        }
     }
 
     if (idRef) {
@@ -285,6 +294,17 @@ const findDocuments = async (input, idRef, classID, clauses, restrictRolesSearch
     if (classID) {
         const classIDRegex = new RegExp(`^${classID}$`, "iu");
         matchConditions.push({ "@id": classIDRegex });
+    }
+
+    if (cmnote) {
+        console.log("Processing cmnote...", cmnote)
+        const cmnoteRegex = new RegExp(`^${cmnote}$`, "iu");
+        matchConditions.push({ "classmembers.classmember.cmnote": cmnoteRegex });
+    }
+
+    if (restrict) {
+        const restrictRegex = new RegExp(`^${restrict}$`, "iu");
+        matchConditions.push({ "classmembers.classmember.restrict": restrictRegex });
     }
 
     // if (clauses) {
@@ -430,13 +450,18 @@ router.post('/api/batch-links', async (req, res) => {
 router.get("/api/search", function (req, res) {
     console.log("QUERY", req.query);
 
-    const version = req.query.version;
+    const version = req.query.version || 'synsemclass5.0';
     const restrictRolesSearch = req.query.restrictRolesSearch === 'true';
+    const diacriticsSensitive = req.query.diacriticsSensitive === 'true';
 
     const query = req.query.lemma;
     const idRef = req.query.idRef;
     const classID = req.query.classID;
     const filters = req.query.filters ? req.query.filters.split(",") : [];
+
+    const cmnote = req.query.cmnote;
+    const restrict = req.query.restrict;
+
     // let clauses = req.query.roles_cnf ? JSON.parse(req.query.roles_cnf) : false;
     // if (Array.isArray(clauses) && clauses.length === 0) {
     // clauses = false;
@@ -491,8 +516,11 @@ router.get("/api/search", function (req, res) {
     console.log("filters:", filters);
     console.log("selected version:", version);
     console.log("restrictRolesSearch:", restrictRolesSearch);
+    console.log("cmnote:", cmnote);
+    console.log("restrict:", restrict);
+    console.log("diacritics sensitive search:", diacriticsSensitive);
 
-    if (!query && !idRef && !classID && filters.length === 0 && clauses.length === 0) {
+    if (!query && !idRef && !classID && !cmnote && !restrict && filters.length === 0 && clauses.length === 0) {
         return res.json([]);
     }
 
@@ -515,14 +543,14 @@ router.get("/api/search", function (req, res) {
     
     for (const filterValue of filters) {
         if (collections[filterValue]) {
-            searchFunctions.push(() => findDocuments(query, idRef, classID, clauses, restrictRolesSearch, collections[filterValue])
+            searchFunctions.push(() => findDocuments(query, idRef, classID, cmnote, restrict, clauses, restrictRolesSearch, diacriticsSensitive, collections[filterValue])
             .then(result => ({...result, language: filterValue}))); 
         }
     }
     
     if (filters.length === 0) {
         Object.keys(collections).forEach(language => {
-            searchFunctions.push(() => findDocuments(query, idRef, classID, clauses, restrictRolesSearch, collections[language])
+            searchFunctions.push(() => findDocuments(query, idRef, classID, cmnote, restrict, clauses, restrictRolesSearch, diacriticsSensitive, collections[language])
             .then(result => ({...result, language})));  
         });
     }
@@ -623,8 +651,10 @@ router.get("/api/search", function (req, res) {
     
     });
     
+    
+let common_components_path = (isLocal || isQuest) ? '' : '/';
 // Include lindat-common header and footer
-app.get(`${BASE_PATH}/header`, (req, res) => {
+app.get(`${BASE_PATH}${common_components_path}header`, (req, res) => {
     fs.readFile(path.join(__dirname, '..', 'client', 'public', 'lindat-common', 'header.htm'), 'utf8', (err, data) => {
         if (err) {
         res.status(500).send('An error occurred while reading the header file.');
@@ -634,7 +664,7 @@ app.get(`${BASE_PATH}/header`, (req, res) => {
     });
 });
 
-app.get(`${BASE_PATH}/footer`, (req, res) => {
+app.get(`${BASE_PATH}${common_components_path}footer`, (req, res) => {
     fs.readFile(path.join(__dirname, '..', 'client', 'public', 'lindat-common', 'footer.htm'), 'utf8', (err, data) => {
         if (err) {
         res.status(500).send('An error occurred while reading the footer file.');
