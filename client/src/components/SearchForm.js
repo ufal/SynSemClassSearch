@@ -20,14 +20,9 @@ function useQuery() {
 }
 
 const SearchForm = () => {
-  // const [selectedVersion, setSelectedVersion] = useState('synsemclass5.0');
   const urlParams = new URLSearchParams(window.location.search);
   const versionFromURL = urlParams.get('version');
   const [selectedVersion, setSelectedVersion] = useState(versionFromURL || 'synsemclass5.0');
-
-  const navigate = useNavigate();
-  const location = useLocation();
-
   const urlQuery = useQuery();
   const [query, setQuery] = useState('');
   const [idRefQuery, setIdRefQuery] = useState('');
@@ -55,6 +50,7 @@ const SearchForm = () => {
   const [pagedResults, setPagedResults] = useState([]);
   const [pageCount, setPageCount] = useState(0); 
 
+  const location = useLocation();
 
   const [classMembersCount, setClassMembersCount] = useState();
   const resultsTextRef = useRef(null);
@@ -67,11 +63,6 @@ const SearchForm = () => {
   const handleClearAll = () => {
     window.location.reload();
 };
-
-//   const handleClearAll = () => {
-//     window.location.href = `${process.env.REACT_APP_API_BASE_URL}`;
-// };
-
   
   useEffect(() => {
     const fetchShortLabels = async () => {
@@ -104,48 +95,50 @@ const SearchForm = () => {
   // New function to get a readable query string
   const getReadableQuery = () => {
     return clauses.map((clause, ci) => {
-        const rolesStr = clause.roles.join(' OR ');
-        return `(${rolesStr})${ci !== clauses.length-1 ? ' AND' : ''}`;
+      const rolesStr = clause.roles.join(' OR ');
+      return `(${rolesStr})${ci !== clauses.length - 1 ? ' AND' : ''}`;
     }).join(' ');
-}
+  };
+  
 
   useEffect(() => {
-    if (!urlQuery.get('lemma') && !urlQuery.get('idRef') && !urlQuery.get('classID') && !urlQuery.get('filters') && !urlQuery.get('cmnote') && !urlQuery.get('restrict') && !urlQuery.get('roles_cnf')) {
-      return;
-    }
+    const urlParams = new URLSearchParams(location.search);
+  
     async function fetchResultsFromUrl() {
-      const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/search`, {
-        params: {
-          lemma: urlQuery.get('lemma'),
-          idRef: urlQuery.get('idRef'),
-          classID: urlQuery.get('classID'),
-          cmnote: urlQuery.get('cmnote'),
-          restrict: urlQuery.get('restrict'),
-          filters: urlQuery.get('filters'),
-          roles_cnf: urlQuery.get('roles_cnf'),
-          version: urlQuery.get('version'),
-          restrictRolesSearch: urlQuery.get('restrictRolesSearch'),
-          diacriticsSensitive: urlQuery.get('diacriticsSensitive')
-        },
-      });
-
-      setIsLoading(false);
-      // setResults(response.data.results);
-      setResults(response.data.pages);
-
-
-      setResultsClassesCount(response.data.uniqueCommonIdCount);
-      setClassMembersCount(response.data.totalClassMembers)
-
-      setLangCounts(response.data.langCounts);
-      setShowNoResults(response.data.pages.length === 0);
-      // Reset the current page to 0 whenever a new search is made
-      // setCurrentPage(0);
+      const params = {
+        lemma: urlParams.get('lemma'),
+        idRef: urlParams.get('idRef'),
+        classID: urlParams.get('classID'),
+        cmnote: urlParams.get('cmnote'),
+        restrict: urlParams.get('restrict'),
+        filters: urlParams.get('filters'),
+        roles_cnf: urlParams.get('roles_cnf'),
+        version: urlParams.get('version'),
+        restrictRolesSearch: urlParams.get('restrictRolesSearch') === 'true',
+        diacriticsSensitive: urlParams.get('diacriticsSensitive') === 'true'
+      };
+  
+      // If all parameters are null or empty, don't fetch
+      if (Object.values(params).every(val => !val)) {
+        return;
+      }
+  
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/search`, { params });
+        setIsLoading(false);
+        setResults(response.data.pages);
+        setResultsClassesCount(response.data.uniqueCommonIdCount);
+        setClassMembersCount(response.data.totalClassMembers);
+        setLangCounts(response.data.langCounts);
+        setShowNoResults(response.data.pages.length === 0);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
     }
-
+  
     fetchResultsFromUrl();
-  }, [urlQuery]);
-
+  }, [location.search]); // Depend on location.search to trigger on URL change
+  
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -188,11 +181,24 @@ const SearchForm = () => {
 
     setLangCounts(response.data.langCounts);
     setShowNoResults(response.data.pages.length === 0);
-    
+
     // Reset the current page to 0 whenever a new search is made
     setCurrentPage(0);
   };
-
+  
+  // Helper function to compare arrays
+  function arraysEqual(arr1, arr2) {
+    if (arr1.length !== arr2.length) return false;
+    for (let i = 0; i < arr1.length; i++) {
+      if (Array.isArray(arr1[i]) && Array.isArray(arr2[i])) {
+        if (!arraysEqual(arr1[i], arr2[i])) return false;
+      } else if (arr1[i] !== arr2[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+  
   const handleFetchClassMembers = async (classID) => {
     try {
         const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/search`, {
@@ -210,7 +216,16 @@ const SearchForm = () => {
             },
         });
         // Update the results state with the new data
+        setQuery('');
+        setIdRefQuery('');
+        setclassIDQuery(classID);
+        setCmnoteQuery('');
+        setRestrictQuery('');
+        setFilters([]);
         setIsLoading(false);
+        setClauses([]);
+        setrestrictRolesSearch(false);
+        setDiacriticsSensitive(false);
       // setResults(response.data.results);
       setResults(response.data.pages);
 
@@ -234,6 +249,12 @@ const SearchForm = () => {
       roles: [role] 
     }));
     setClauses(newClauses);
+
+    setQuery('');
+    setIdRefQuery('');
+    setclassIDQuery('');
+    setCmnoteQuery('');
+    setRestrictQuery('');
   };
 
 
@@ -351,15 +372,69 @@ const SearchForm = () => {
     cz: 'Czech',
     deu: 'German',
     spa: 'Spanish'
-};
+  };
+
+  const handleDownloadJson = async () => {
+    try {
+      const cnfClauses = getCNFclauses();
+      const cnfString = cnfClauses.length > 0 ? JSON.stringify(cnfClauses) : '';
+
+      const params = {
+        lemma: query,
+        idRef: idRefQuery,
+        classID: classIDQuery,
+        cmnote: cmnoteQuery,
+        restrict: restrictQuery,
+        filters: filters.join(","),
+        roles_cnf: cnfString,
+        version: selectedVersion,
+        restrictRolesSearch: restrictRolesSearch,
+        diacriticsSensitive: diacriticsSensitive,
+        allResults: true
+      };
+
+      const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/search`, { params });
+
+      const blob = new Blob([JSON.stringify(response.data)], { type: 'application/json' });
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+
+      // Constructing the file name
+      let fileName = 'results';
+      for (const [key, value] of Object.entries(params)) {
+        if (value && key !== 'allResults') {
+          const encodedValue = key === 'roles_cnf' && cnfString !== '' ? cnfString : encodeURIComponent(value);
+          fileName += `&${key}=${encodedValue}`;
+        }
+      }
+
+      // Replace the first '&' with '_'
+      fileName = fileName.replace('&', '_');
+
+      link.download = `${fileName}.json`;
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('Error downloading JSON:', error);
+    }
+  };
 
   return (
     <div>
     <div className='stats'>
-      <Link to="/statistics" state={{ selectedVersion: selectedVersion }} className='stats-link'>
-          Show Statistics
-      </Link>
-    </div>
+    <a 
+        href={`/statistics?version=${selectedVersion}`} 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        className='stats-link'
+    >
+        Show Statistics
+    </a>
+</div>
+
 
     <div className="db-selection-container">
     <label className="db-selection-label">
@@ -597,6 +672,12 @@ const SearchForm = () => {
                     </li>
                 ))}
             </ul>
+            
+            <div className='download-button-container'>
+              <button className='download-button' onClick={handleDownloadJson}>
+                Download JSON
+              </button>
+            </div>
 
             {/* {console.log("CLIENT SIDE RESULTS:", results)}
             {console.log("RES LEN", results.length)} */}

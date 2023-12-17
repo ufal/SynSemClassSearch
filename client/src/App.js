@@ -22,7 +22,6 @@ function App() {
       <div className="main-content">
         <Routes>
           <Route path={`${process.env.PUBLIC_URL}/`} element={<SearchForm />} />
-          <Route path={`${process.env.PUBLIC_URL}/search`} element={<SearchForm />} />
           <Route path={`${process.env.PUBLIC_URL}/statistics`} element={<Statistics />} />
         </Routes>
       </div>

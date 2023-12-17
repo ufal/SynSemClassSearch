@@ -10,6 +10,10 @@ ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarEle
 
 const Statistics = () => {
     const location = useLocation();
+    const urlParams = new URLSearchParams(location.search);
+    const versionFromURL = urlParams.get('version');
+    const selectedVersion = versionFromURL || 'synsemclass5.0';
+
     const [stats, setStats] = useState({
         uniqueCommonClassCount: 0,
         uniqueCommonIdCount: 0,
@@ -17,7 +21,7 @@ const Statistics = () => {
         langCounts: {}
     });
     const [isLoading, setIsLoading] = useState(true);
-    const selectedVersion = location.state?.selectedVersion || 'synsemclass5.0';
+    // const selectedVersion = location.state?.selectedVersion || 'synsemclass5.0';
 
     const version = selectedVersion === 'synsemclass5.0' ? 'SynSemClass5.0' : 'SynSemClass4.0';
 
@@ -152,7 +156,7 @@ const Statistics = () => {
                     <Pie data={pieChartData} options={pieChartOptions} size={350}/>
                 </div>
                 <div className="chart-section bar-chart">
-                    <h3>Unique Classes by Language</h3>
+                    <h3>Classes by Language</h3>
                     <Bar data={barChartData} options={barChartOptions} height={300}/>
                 </div>
             </div>

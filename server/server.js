@@ -462,6 +462,8 @@ router.get("/api/search", function (req, res) {
     const cmnote = req.query.cmnote;
     const restrict = req.query.restrict;
 
+    const allResults = req.query.allResults === 'true';
+
     // let clauses = req.query.roles_cnf ? JSON.parse(req.query.roles_cnf) : false;
     // if (Array.isArray(clauses) && clauses.length === 0) {
     // clauses = false;
@@ -624,22 +626,26 @@ router.get("/api/search", function (req, res) {
         console.log(`Found ${uniqueCommonIdCount} unique classes based on '@id'.`);
 
         // console.log("API RESULT", groupedResults);
+        if (allResults) {
+            console.log(">>>Sent .json data without pagination for further downloading.")
+            res.json(sortedResults);
+        } else {
+            console.log(">>>Applied pagination on server-side.")
+            // Calculate the total number of pages
+            const pageSize = 5; // Replace with your desired page size
+            const totalPageCount = Math.ceil(sortedArray.length / pageSize);
 
-        // Calculate the total number of pages
-        const pageSize = 5; // Replace with your desired page size
-        const totalPageCount = Math.ceil(sortedArray.length / pageSize);
+            // Pre-calculate the page slices
+            const slices = [];
+            for (let i = 0; i < totalPageCount; i++) {
+            const slicedEntries = sortedArray.slice(i * pageSize, (i + 1) * pageSize);
+            const slicedResults = Object.fromEntries(slicedEntries);
+                slices.push(slicedResults);
+            }
 
-        // Pre-calculate the page slices
-        const slices = [];
-        for (let i = 0; i < totalPageCount; i++) {
-        const slicedEntries = sortedArray.slice(i * pageSize, (i + 1) * pageSize);
-        const slicedResults = Object.fromEntries(slicedEntries);
-            slices.push(slicedResults);
-        }
-
-        // Send the response back to the client
-        res.json({ pages: slices, uniqueCommonClassCount, uniqueCommonIdCount, langCounts, totalClassMembers });
-    })
+            // Send the response back to the client
+            res.json({ pages: slices, uniqueCommonClassCount, uniqueCommonIdCount, langCounts, totalClassMembers });
+        }})
     .catch((err) => {
         // Handle any errors
         console.error(err);

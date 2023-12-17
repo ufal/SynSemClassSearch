@@ -406,3 +406,28 @@ input:-webkit-autofill:focus {
     margin-bottom: 10px;
     text-decoration: none;
 }
+
+.download-button-container {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.download-button {
+    background-color: #f1f1f1;
+    border: none;
+    color: black;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    margin-right: 5px;
+    font-size: 12px;
+    padding: 5px 7px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.download-button:hover {
+    background-color: #e6e6e6; 
+    border-color: #bbb; 
+}
