@@ -118,8 +118,8 @@ const SearchForm = () => {
         diacriticsSensitive: urlParams.get('diacriticsSensitive') === 'true'
       };
   
-      // If all parameters are null or empty, don't fetch
-      if (Object.values(params).every(val => !val)) {
+      // Check if any main search parameters are present
+      if (!params.lemma && !params.idRef && !params.classID && !params.cmnote && !params.restrict && !params.roles_cnf) {
         return;
       }
   
@@ -137,7 +137,7 @@ const SearchForm = () => {
     }
   
     fetchResultsFromUrl();
-  }, [location.search]); // Depend on location.search to trigger on URL change
+  }, [location.search]); // Depend on location.search to trigger on URL change  
   
   const handleSubmit = async (event) => {
     event.preventDefault();
