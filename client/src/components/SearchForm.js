@@ -426,7 +426,7 @@ const SearchForm = () => {
     <div>
     <div className='stats'>
     <a 
-        href={`/statistics?version=${selectedVersion}`} 
+        href={`${process.env.REACT_APP_API_BASE_URL}/statistics?version=${selectedVersion}`} 
         target="_blank" 
         rel="noopener noreferrer" 
         className='stats-link'
