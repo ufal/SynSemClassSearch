@@ -67,7 +67,9 @@ const SearchForm = () => {
   useEffect(() => {
     const fetchShortLabels = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/shortlabels`);
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/shortlabels`, {
+          version: selectedVersion
+        });
         setroleOptions(response.data);
       } catch (error) {
         console.error('Error fetching shortlabels:', error);
@@ -531,12 +533,12 @@ const SearchForm = () => {
           </div>
 
           <div className="search-row cmnote-row">
-            <label className="input-label" htmlFor="CmnoteInput">Cmnote search:</label>
+            <label className="input-label" htmlFor="CmnoteInput">CM Note search:</label>
             <input
               id="CmnoteInput"
               type="text"
               className="search-input cmnote-input"
-              placeholder="Cmnote (e.g. idiom.*)"
+              placeholder="CM Note (e.g. idiom.*)"
               autoComplete='off'
               value={cmnoteQuery}
               onChange={handleCmnoteChange}
@@ -544,12 +546,12 @@ const SearchForm = () => {
           </div>
 
           <div className="search-row restrict-row">
-            <label className="input-label" htmlFor="RestrictInput">Restrict field search:</label>
+            <label className="input-label" htmlFor="RestrictInput">CM Restrict search:</label>
             <input
               id="RestrictInput"
               type="text"
               className="search-input restrict-input"
-              placeholder="Restrict field (e.g. to come across as)"
+              placeholder="CM Restrict (e.g. to come across as)"
               autoComplete='off'
               value={restrictQuery}
               onChange={handleRestrictChange}

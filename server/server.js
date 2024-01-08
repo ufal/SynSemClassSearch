@@ -229,9 +229,11 @@ const findVeclassIdsByRoleIds = async (roleIds, roleOperators) => {
 };
 
 // Main query search function that combines all search options together
-const findDocuments = async (input, idRef, classID, cmnote, restrict, clauses, restrictRolesSearch, diacriticsSensitive, collection) => {
+const findDocuments = async (input, idRef, classID, cmnote, restrict, clauses, restrictRolesSearch, diacriticsSensitive, collection, version) => {
     // Retrieve the list of valid Veclass_Roles documents that have their @status NOT in ["merged", "deleted"].
-    const validVeclassIds = (await Veclass_Roles.find({ "@status": { $nin: ["merged", "deleted"] } }).select("@id")).map(veclass => veclass["@id"]);
+    const VRoles = version == 'synsemclass5.0' ? Veclass_Roles5: Veclass_Roles;
+    console.log("version", version)
+    const validVeclassIds = (await VRoles.find({ "@status": { $nin: ["merged", "deleted"] } }).select("@id")).map(veclass => veclass["@id"]);
 
     const query = [
         { $unwind: "$classmembers.classmember" },
@@ -363,8 +365,9 @@ const findDocuments = async (input, idRef, classID, cmnote, restrict, clauses, r
 };
 
 /// get shortlabels roles
-const getAllShortLabels = async () => {
-    return Roles.find({}, { shortlabel: 1, _id: 0 }).lean();
+const getAllShortLabels = async (roles_collection) => {
+
+    return roles_collection.find({}, { shortlabel: 1, _id: 0 }).lean();
 };
 
 // Set up routes
@@ -376,7 +379,9 @@ app.use(BASE_PATH, express.static(path.join(__dirname, '..', 'client', 'build'))
 /// request to get roles list
 router.get('/api/shortlabels', async (req, res) => {
     try {
-        const shortLabels = await getAllShortLabels();
+        const version = req.body.version;
+        const roles_collection = version == 'synsemclass5.0' ? Roles5 : Roles;
+        const shortLabels = await getAllShortLabels(roles_collection);
         if (!shortLabels.length) {
             return res.status(404).json({ error: 'No short labels found.' });
         }
@@ -545,14 +550,14 @@ router.get("/api/search", function (req, res) {
     
     for (const filterValue of filters) {
         if (collections[filterValue]) {
-            searchFunctions.push(() => findDocuments(query, idRef, classID, cmnote, restrict, clauses, restrictRolesSearch, diacriticsSensitive, collections[filterValue])
+            searchFunctions.push(() => findDocuments(query, idRef, classID, cmnote, restrict, clauses, restrictRolesSearch, diacriticsSensitive, collections[filterValue], version)
             .then(result => ({...result, language: filterValue}))); 
         }
     }
     
     if (filters.length === 0) {
         Object.keys(collections).forEach(language => {
-            searchFunctions.push(() => findDocuments(query, idRef, classID, cmnote, restrict, clauses, restrictRolesSearch, diacriticsSensitive, collections[language])
+            searchFunctions.push(() => findDocuments(query, idRef, classID, cmnote, restrict, clauses, restrictRolesSearch, diacriticsSensitive, collections[language], version)
             .then(result => ({...result, language})));  
         });
     }
