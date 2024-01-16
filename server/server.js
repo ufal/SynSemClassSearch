@@ -66,46 +66,12 @@ const classMemberSchema = {
     },
     };
 
-    // {
-    //     "_id" : ObjectId("643ebdecd08536c89d0501fd"),
-    //     "@id" : "vecroleAbandoned",
-    //     "comesfrom" : {
-    //         "@lexicon" : "synsemclass"
-    //     },
-    //     "label" : "Sb/sth deserted or left swh.",
-    //     "shortlabel" : "Abandoned"
-    // }
-
 const rolesSchema = {
     "@id": String,
     "comesfrom": Array,
     "label": String,
     "shortlabel": String
     };
-
-    // {
-    //     "_id" : ObjectId("643ebdfbdb06e25469072319"),
-    //     "@id" : "vec00002",
-    //     "@status" : "finished",
-    //     "class_definition" : "A Cognizer expects a Phenomenon that comes from a Source.",
-    //     "commonroles" : {
-    //         "role" : [
-    //             {
-    //                 "@idref" : "vecroleCognizer",
-    //                 "@spec" : ""
-    //             },
-    //             {
-    //                 "@idref" : "vecrolePhenomenon",
-    //                 "@spec" : ""
-    //             },
-    //             {
-    //                 "@idref" : "vecroleSource",
-    //                 "@spec" : ""
-    //             }
-    //         ]
-    //     },
-    //     "classnote" : null
-    // }
 
 const veclass_rolesSchema = {
     "@id" : String,
@@ -168,66 +134,6 @@ const Links_ces5 = dbConnection2.model("ces_reflexicon", linksSchema);
 const Links_deu5 = dbConnection2.model("deu_reflexicon", linksSchema);
 const Links_spa5 = dbConnection2.model("spa_reflexicon", linksSchema);
 
-// Deprecated functions; no need since the database was updated to contain the roles
-const findRoleIdsByShortLabel = async (roles) => {
-    const roleIds = await Roles.find({ shortlabel: { $in: roles } }).select("@id");
-    return roleIds.map((role) => role["@id"]);
-};
-
-const findVeclassIdsByRoleIds = async (roleIds, roleOperators) => {
-    let veclassIds;
-
-    const statusNotMergedOrDeleted = {
-        "@status": { $nin: ["merged", "deleted"] },
-    };
-
-    if (roleOperators === "AND") {
-        const matchQuery = [
-        {
-            $match: {
-            ...statusNotMergedOrDeleted,
-            },
-        },
-        {
-            $addFields: {
-            processedRoles: {
-                $cond: [
-                { $isArray: "$commonroles.role" },
-                "$commonroles.role",
-                [{ $ifNull: ["$commonroles.role", []] }],
-                ],
-            },
-            },
-        },
-        {
-            $addFields: {
-            matchingRoles: {
-                $filter: {
-                input: "$processedRoles",
-                as: "role",
-                cond: { $in: ["$$role.@idref", roleIds] },
-                },
-            },
-            },
-        },
-        {
-            $match: {
-            matchingRoles: { $size: roleIds.length },
-            },
-        },
-        ];
-
-        veclassIds = await Veclass_Roles.aggregate(matchQuery).exec();
-    } else {
-        veclassIds = await Veclass_Roles.find({
-        "commonroles.role.@idref": { $in: roleIds },
-        ...statusNotMergedOrDeleted,
-        }).select("@id");
-    }
-
-    return veclassIds.map((veclass) => veclass["@id"] || veclass["_id"]);
-};
-
 // Main query search function that combines all search options together
 const findDocuments = async (input, idRef, classID, cmnote, restrict, clauses, restrictRolesSearch, diacriticsSensitive, collection, version) => {
     // Retrieve the list of valid Veclass_Roles documents that have their @status NOT in ["merged", "deleted"].
@@ -243,12 +149,6 @@ const findDocuments = async (input, idRef, classID, cmnote, restrict, clauses, r
             "@id": { $in: validVeclassIds },
         },
         },
-        // { $addFields: {
-        //         "classmembers.classmember.common_id": "$@id",
-        //         "classmembers.classmember.common_class": "$@lemma",
-        //     }
-        // }, 
-        // other match conditions here
         {
         $group: {
             _id: "$@id",
@@ -317,7 +217,6 @@ const findDocuments = async (input, idRef, classID, cmnote, restrict, clauses, r
 
     //     matchConditions.push({ $and: clauseConditions });
     // }
-
 
     if (clauses) {
         const clauseConditions = clauses.map(clause => {

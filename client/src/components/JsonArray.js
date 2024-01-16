@@ -1,3 +1,5 @@
+// Deprecated component (used to render search results based on class members (before the class-centric presentation was implemented))
+
 import React, { useState } from 'react';
 
 import './styles/JsonArray.css';

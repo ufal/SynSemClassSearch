@@ -4,6 +4,7 @@ import copy from 'copy-to-clipboard';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+// copy the email address
 const copyToClipboard = (str, event) => {
     event.stopPropagation(); // This will stop the event from bubbling up to the link click
     event.preventDefault(); // This will prevent the link from being followed
@@ -20,6 +21,7 @@ const copyToClipboard = (str, event) => {
     });
 };
 
+// Provides contact information and API guide link to use in the App.js as a separate flexible component
 function Contact() {
     const email = "petliak@ufal.mff.cuni.cz"
     return (

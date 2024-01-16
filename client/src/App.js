@@ -1,3 +1,5 @@
+// Manages routing and layout, integrating key components like SearchForm, Statistics, and Contact.
+
 import React, { useEffect, useState } from "react";
 import axios from 'axios';
 import SearchForm from "./components/SearchForm";

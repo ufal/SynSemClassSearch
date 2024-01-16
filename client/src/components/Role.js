@@ -1,6 +1,7 @@
 import React from "react";
 import './styles/Role.css';
 
+// Role component for CNF roles' query construction
 const Role = ({ role, onRemoveRole, isLastRole, showOR }) => {
     return (
         <div className="role">

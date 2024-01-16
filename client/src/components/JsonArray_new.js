@@ -18,7 +18,7 @@ import { useLocation } from 'react-router-dom';
     />
 
 
-
+// Function to get flag image based on language code
 function getFlag(lang) {
     switch (lang) {
         case "eng":
@@ -34,15 +34,17 @@ function getFlag(lang) {
     }
 }
 
-
+// Main component to render JSON data in an accordion format
 function JsonArray({ data, currentPage, onFetchClassMembers, onFillRolesInQuery, version }) {
     const mobileIndent = window.innerWidth <= 768;
     // const [expandedItems, setExpandedItems] = useState([]);
+
+    // State for tracking expanded items and members in the accordion
     const [expandedItems, setExpandedItems] = useState([]);
     const [expandedMembers, setExpandedMembers] = useState([]);
     const [tooltipIndex, setTooltipIndex] = React.useState(-1);
 
-
+    // Function to toggle the expansion of accordion items
     const toggleExpand = (index, isMember) => {
         if(isMember) {
             const newExpandedMembers = [...expandedMembers];
@@ -69,11 +71,12 @@ function JsonArray({ data, currentPage, onFetchClassMembers, onFillRolesInQuery,
     //     setExpandedItems([]);
     // }, [data]);
 
+    // Reset expanded items when currentPage changes
     useEffect(() => {
         setExpandedItems([]);
     }, [currentPage]);
     
-
+    // Function to copy text to clipboard and show toast notification
     const copyToClipboard = (str, event) => {
         event.stopPropagation(); // This will stop the event from bubbling up to the link click
         event.preventDefault(); // This will prevent the link from being followed
@@ -91,6 +94,7 @@ function JsonArray({ data, currentPage, onFetchClassMembers, onFillRolesInQuery,
         });
     };
 
+    // Function to extract roles from a class item
     const getRoles = (classItem) => {
         let maparg = classItem.maparg.argpair;
         
@@ -111,6 +115,7 @@ function JsonArray({ data, currentPage, onFetchClassMembers, onFillRolesInQuery,
         return [...roles]; // convert Set to Array for easier handling later
         };
     
+    // JSX rendering for the accordion structure
     return (
         <div className="accordion">
             {data && Object.entries(data).map(([id, itemList], index) => (
@@ -483,7 +488,7 @@ function constructLink(type, value, rootData, version, isExtlexLinkItem = false,
     return value;  // Default to return original value
 }
 
-
+// Component to render hyperlinks based on type and value
 function LinkRenderer({ type, value, rootData, version, isExtlexLinkItem = false, depth = 0, linkAttributes = {} }) {
     const href = constructLink(type, value, rootData, version, isExtlexLinkItem, depth, linkAttributes);
     return (
@@ -496,8 +501,10 @@ function LinkRenderer({ type, value, rootData, version, isExtlexLinkItem = false
     );
 }
 
+// Recursive component to render nested JSON data
 function JsonTree({ data, depth = 0, mobileIndent = false, rootData = data, version, extlexIdRef = null, linkAttributes = {} }) {
 
+    // Function to render each value in the JSON tree
     function renderValue(key, value, rootData, depth, extlexIdRef = null, linkAttributes = {}) {
         return <LinkRenderer type={key} value={value} depth={depth} rootData={rootData} version={version} 
         isExtlexLinkItem={extlexIdRef === "pdtvallex" || extlexIdRef === "czengvallex" || 

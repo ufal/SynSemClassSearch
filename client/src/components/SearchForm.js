@@ -1,3 +1,5 @@
+// Main component in the React app, handles search queries and paginated results
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -15,11 +17,13 @@ import Contact from "./Contact";
 import { Link } from 'react-router-dom';
 // import Statistics from "./Statistics";
 
+// Custom hook for parsing URL query parameters
 function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
 
 const SearchForm = () => {
+   // State initialization for search form
   const urlParams = new URLSearchParams(window.location.search);
   const versionFromURL = urlParams.get('version');
   const [selectedVersion, setSelectedVersion] = useState(versionFromURL || 'synsemclass5.0');
@@ -55,15 +59,18 @@ const SearchForm = () => {
   const [classMembersCount, setClassMembersCount] = useState();
   const resultsTextRef = useRef(null);
 
+  // Handles pagination of search results
   const handlePageChange = (selectedItem) => {
     setCurrentPage(selectedItem.selected);
     resultsTextRef.current.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Clears all input fields and resets the form
   const handleClearAll = () => {
     window.location.reload();
 };
   
+  // Fetches role options for the search form on component mount
   useEffect(() => {
     const fetchShortLabels = async () => {
       try {
@@ -78,7 +85,8 @@ const SearchForm = () => {
 
     fetchShortLabels();
   }, []);
-
+  
+  // Updates page count based on the number of results
   useEffect(() => {
     const calculatedPageCount = Math.ceil(results.length);
     setPageCount(calculatedPageCount);
@@ -141,6 +149,7 @@ const SearchForm = () => {
     fetchResultsFromUrl();
   }, [location.search]); // Depend on location.search to trigger on URL change  
   
+  // Handles form submission and fetches search results based on query parameters
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -260,7 +269,7 @@ const SearchForm = () => {
   };
 
 
-  
+  // Event handler for input field changes
   const handleChange = (event) => {
     setQuery(event.target.value);
   };
@@ -424,6 +433,7 @@ const SearchForm = () => {
     }
   };
 
+  // JSX rendering for the search form, including filters, inputs, and buttons
   return (
     <div>
     <div className='stats'>

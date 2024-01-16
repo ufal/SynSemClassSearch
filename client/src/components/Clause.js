@@ -3,6 +3,7 @@ import Role from './Role';
 import './styles/Clause.css';
 import Select from 'react-select';
 
+// Handles a single clause in the CNF query construction, including role addition and removal.
 const Clause = ({ id, roles, onAddRole, onRemoveRole, removeClause, isLastClause, selectOptions }) => {
 
     const [selectedRole, setSelectedRole] = useState(null);

@@ -8,6 +8,7 @@ import { useLocation } from 'react-router-dom';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, ChartDataLabels);
 
+// Generates diagrams (pie chart and bar plot) for Statistics page, based on the whole database statistics: classes count, class members count, unique classes etc.
 const Statistics = () => {
     const location = useLocation();
     const urlParams = new URLSearchParams(location.search);
