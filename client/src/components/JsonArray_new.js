@@ -205,7 +205,7 @@ function JsonArray({ data, currentPage, onFetchClassMembers, onFillRolesInQuery,
                                                             <i className="fa fa-copy copy-icon" onClick={(event) => copyToClipboard(member["@id"], event)}></i>
                                                         </span>
                                                         <span className='classmember-item argpair'>
-                                                        {(Array.isArray(member.maparg.argpair) ? member.maparg.argpair : [member.maparg.argpair]).map((argpair, pairIndex) => {
+                                                        {member.maparg && (Array.isArray(member.maparg.argpair) ? member.maparg.argpair : [member.maparg.argpair]).map((argpair, pairIndex) => {
                                                             // Keep only uppercase characters
                                                             let argFrom;
                                                             if (argpair.argfrom['@idref'] === "#alt") {
