@@ -34,6 +34,20 @@ function getFlag(lang) {
     }
 }
 
+// Function to get SynSemClass Browse Web page based on version
+function getBrowsePage(version) { 
+    switch (version) {
+	case "synsemclass4.0":
+            return `https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html`;
+        case "synsemclass5.0":
+            return `https://lindat.mff.cuni.cz/services/SynSemClass50/SynSemClass50.html`;
+        case "synsemclass5.1":
+            return `https://lindat.mff.cuni.cz/services/SynSemClass51/SynSemClass51.html`;
+	default:
+	    return null;
+    }
+}
+
 // Main component to render JSON data in an accordion format
 function JsonArray({ data, currentPage, onFetchClassMembers, onFillRolesInQuery, version }) {
     const mobileIndent = window.innerWidth <= 768;
@@ -121,9 +135,7 @@ function JsonArray({ data, currentPage, onFetchClassMembers, onFillRolesInQuery,
             {data && Object.entries(data).map(([id, itemList], index) => (
                 <div key={index} className="groupbyID">
                     <div className='classID-group'>
-                    <a className="common-link topID" href={version === "synsemclass4.0" 
-        ? `https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${id}`
-        : `https://lindat.mff.cuni.cz/services/SynSemClass50/SynSemClass50.html?veclass=${id}`} target="_blank" rel="noopener noreferrer">
+                    <a className="common-link topID" href={ getBrowsePage(version) + "?veclass=" + id } target="_blank" rel="noopener noreferrer">
                         <span className="classID">
                             class ID: {id}
                             <span className="copy-icon-wrapper">
@@ -153,9 +165,7 @@ function JsonArray({ data, currentPage, onFetchClassMembers, onFillRolesInQuery,
                         return (
                             <div key={itemKey} className="accordion-item">
                                 <div className="accordion-header">
-                                    <a className="common-link" href={version === "synsemclass4.0"? 
-                                    `https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${id}`
-                                    : `https://lindat.mff.cuni.cz/services/SynSemClass50/SynSemClass50.html?veclass=${id}`} target="_blank" rel="noopener noreferrer">
+                    		    <a className="common-link" href={ getBrowsePage(version) + "?veclass=" + id } target="_blank" rel="noopener noreferrer">
                                         <div className="flag">
                                         <img src={getFlag(classItem.classMembers[0]["@lang"])} alt="" />
                                         </div>
@@ -167,9 +177,7 @@ function JsonArray({ data, currentPage, onFetchClassMembers, onFillRolesInQuery,
                                     <div className='classmember-block'>
                                         <span className='classmember-count'>{classItem.classMembers.length} class member(s): </span>
                                         {!expandedItems.includes(itemKey) && classItem.classMembers.slice(0, 2).map((member, i) => (
-                                            <a key={i} className="item-info" href={version === "synsemclass4.0"
-                                            ? `https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${id}#${member["@id"]}`
-                                            : `https://lindat.mff.cuni.cz/services/SynSemClass50/SynSemClass50.html?veclass=${id}#${member["@id"]}`} target="_blank" rel="noopener noreferrer">
+                                        <a key={i} className="item-info" href={ getBrowsePage(version) + "?veclass=" + id + "#" + member['@id'] } target="_blank" rel="noopener noreferrer">
                                             <span className="classmember-item">{member["@lemma"]}</span>
                                             <span className='classmember-item idref'>
                                                 ({member["@idref"]})
@@ -192,9 +200,7 @@ function JsonArray({ data, currentPage, onFetchClassMembers, onFillRolesInQuery,
                                         return (
                                             <div key={memberKey} className="accordion-item classmember">
                                                 <div className="accordion-header classmember">
-                                                    <a className="item-info"  href={version === "synsemclass4.0"
-                                            ? `https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${id}#${member["@id"]}`
-                                            : `https://lindat.mff.cuni.cz/services/SynSemClass50/SynSemClass50.html?veclass=${id}#${member["@id"]}`} target="_blank" rel="noopener noreferrer">
+  						    <a className="item-info" href={ getBrowsePage(version) + "?veclass=" + id + "#" + member['@id'] } target="_blank" rel="noopener noreferrer">
                                                         <span className="classmember-item">{member["@lemma"]}</span>
                                                         <span className='classmember-item idref'>
                                                             ({member["@idref"]})
@@ -255,6 +261,7 @@ const LINK_TYPES = {
     VERB: "@verb",
     SENSE: "@sense",
     WORD: "@word",
+    SYNSETID: "@synsetid",
     SUBCLASS: "@subclass",
     CLASS: "@class",
     PREDICATE: "@predicate",
@@ -312,16 +319,13 @@ function generateVerbNetURL(linkAttributes) {
 
 function constructLink(type, value, rootData, version, isExtlexLinkItem = false, depth = 0, linkAttributes = {}) {
     if (depth === 1) {
+	let browseURL = getBrowsePage(version);
         // Handle top-level properties
         switch (type) {
             case LINK_TYPES.ID:
-                return version === "synsemclass4.0" 
-                ? `https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${value.split('-')[0]}`
-                : `https://lindat.mff.cuni.cz/services/SynSemClass50/SynSemClass50.html?veclass=${value.split('-')[0]}`;
+                return `${browseURL}?veclass=${value.split('-')[0]}`;
             case LINK_TYPES.LEMMA:
-                return version === "synsemclass4.0"
-                ? `https://lindat.mff.cuni.cz/services/SynSemClass40/SynSemClass40.html?veclass=${rootData["@id"].split('-')[0]}#${rootData["@id"]}`
-                : `https://lindat.mff.cuni.cz/services/SynSemClass50/SynSemClass50.html?veclass=${rootData["@id"].split('-')[0]}#${rootData["@id"]}`;
+		return `${browseURL}?veclass=${rootData["@id"].split('-')[0]}#${rootData["@id"]}`;
             case LINK_TYPES.IDREF:
                 if (rootData["@lexidref"] === "pdtvallex" || rootData["@lexidref"] === "engvallex") {
                     return `${rootData["lexlink"]}verb=${rootData["@lemma"]}#${value.split("ID-")[1]}`;
@@ -400,11 +404,22 @@ function constructLink(type, value, rootData, version, isExtlexLinkItem = false,
                     return generateOntoNotesURL(linkAttributes);
                 }
                 break;
+
+            case LINK_TYPES.SYNSETID:
+                if (linkAttributes.extlexIdRef === "wn") {
+                    const synsetid = linkAttributes["@synsetid"];
+                    return `https://en-word.net/id/${synsetid}`
+                }
+                break;
             
             case LINK_TYPES.WORD:
                 if (linkAttributes.extlexIdRef === "wn") {
                     const word = linkAttributes["@word"];
-                    return `http://wordnetweb.princeton.edu/perl/webwn?o7=1&s=${word}`
+                    if (version === "synsemclass4.0" || version === "synsemclass5.0"){
+                            return `http://wordnetweb.princeton.edu/perl/webwn?o7=1&s=${word}`;
+                    } else {
+                            return `https://en-word.net/lemma/${word}`;
+                    }
                 }
                 break;
 
@@ -428,7 +443,7 @@ function constructLink(type, value, rootData, version, isExtlexLinkItem = false,
                     }
                 }
                 if (linkAttributes.extlexIdRef === "gup") {
-                    return `http://alanakbik.github.io/UniversalPropositions_German/${linkAttributes["@predicate"]}.html#${linkAttributes["@divid"]}`
+                    return `https://flair.informatik.hu-berlin.de/resources/UP/UniversalPropositions_German/${linkAttributes["@predicate"]}.html#${linkAttributes["@divid"]}`
                 }
                 break;
             

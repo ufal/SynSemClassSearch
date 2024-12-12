@@ -23,7 +23,7 @@ const copyToClipboard = (str, event) => {
 
 // Provides contact information and API guide link to use in the App.js as a separate flexible component
 function Contact() {
-    const email = "petliak@ufal.mff.cuni.cz"
+    const email = "synsemclass@ufal.mff.cuni.cz"
     return (
         <div className="contact-info">
                     <p>

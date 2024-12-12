@@ -26,7 +26,7 @@ const SearchForm = () => {
    // State initialization for search form
   const urlParams = new URLSearchParams(window.location.search);
   const versionFromURL = urlParams.get('version');
-  const [selectedVersion, setSelectedVersion] = useState(versionFromURL || 'synsemclass5.0');
+  const [selectedVersion, setSelectedVersion] = useState(versionFromURL || 'synsemclass5.1');
   const urlQuery = useQuery();
   const [query, setQuery] = useState('');
   const [idRefQuery, setIdRefQuery] = useState('');
@@ -452,6 +452,17 @@ const SearchForm = () => {
     <label className="db-selection-label">
         <input
           type="radio"
+          value="synsemclass5.1"
+          className="db-selection-radio"
+          checked={selectedVersion === 'synsemclass5.1'}
+          onChange={() => setSelectedVersion('synsemclass5.1')}
+        />
+        synsemclass5.1
+      </label>
+    <div className="db-selection-container">
+    <label className="db-selection-label">
+        <input
+          type="radio"
           value="synsemclass5.0"
           className="db-selection-radio"
           checked={selectedVersion === 'synsemclass5.0'}
@@ -486,7 +497,7 @@ const SearchForm = () => {
             <input type="checkbox" value="deu" onChange={handleFilterChange} />
             German
         </label>
-        {selectedVersion === 'synsemclass5.0' && (
+        {selectedVersion !== 'synsemclass4.0' && (
           <label>
               <input type="checkbox" value="spa" onChange={handleFilterChange} />
               Spanish

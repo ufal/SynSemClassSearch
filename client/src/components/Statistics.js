@@ -13,7 +13,7 @@ const Statistics = () => {
     const location = useLocation();
     const urlParams = new URLSearchParams(location.search);
     const versionFromURL = urlParams.get('version');
-    const selectedVersion = versionFromURL || 'synsemclass5.0';
+    const selectedVersion = versionFromURL || 'synsemclass5.1';
 
     const [stats, setStats] = useState({
         uniqueCommonClassCount: 0,
@@ -24,7 +24,18 @@ const Statistics = () => {
     const [isLoading, setIsLoading] = useState(true);
     // const selectedVersion = location.state?.selectedVersion || 'synsemclass5.0';
 
-    const version = selectedVersion === 'synsemclass5.0' ? 'SynSemClass5.0' : 'SynSemClass4.0';
+    let version;
+    switch (selectedVersion) {
+	case 'synsemclass4.0':
+	    version = 'SynSemClass4.0';
+	    break;
+	case 'synsemclass5.0':
+	    version = 'SynSemClass5.0';
+	    break;
+	case 'synsemclass5.1':
+	    version = 'SynSemClass5.1';
+	    break;
+    }
 
     const languageMap = {
         eng: 'English',
