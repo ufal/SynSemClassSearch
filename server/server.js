@@ -36,6 +36,7 @@ mongoose.set('strictQuery', true);
 
 const dbConnection1 = mongoose.createConnection(`mongodb://127.0.0.1:27017/${_DB_NAME}`, { useNewUrlParser: true});
 const dbConnection2 = mongoose.createConnection(`mongodb://127.0.0.1:27017/${_DB_NAME}5`, { useNewUrlParser: true});
+const dbConnection3 = mongoose.createConnection(`mongodb://127.0.0.1:27017/${_DB_NAME}51`, { useNewUrlParser: true});
 
 dbConnection1.once('open', () => {
     console.log('MongoDB database connection established successfully for synsemclass4.0');
@@ -43,6 +44,10 @@ dbConnection1.once('open', () => {
 
 dbConnection2.once('open', () => {
     console.log('MongoDB database connection established successfully  for synsemclass5.0');
+});
+
+dbConnection3.once('open', () => {
+    console.log('MongoDB database connection established successfully  for synsemclass5.1');
 });
 
 const classMemberSchema = {
@@ -66,12 +71,46 @@ const classMemberSchema = {
     },
     };
 
+    // {
+    //     "_id" : ObjectId("643ebdecd08536c89d0501fd"),
+    //     "@id" : "vecroleAbandoned",
+    //     "comesfrom" : {
+    //         "@lexicon" : "synsemclass"
+    //     },
+    //     "label" : "Sb/sth deserted or left swh.",
+    //     "shortlabel" : "Abandoned"
+    // }
+
 const rolesSchema = {
     "@id": String,
     "comesfrom": Array,
     "label": String,
     "shortlabel": String
     };
+
+    // {
+    //     "_id" : ObjectId("643ebdfbdb06e25469072319"),
+    //     "@id" : "vec00002",
+    //     "@status" : "finished",
+    //     "class_definition" : "A Cognizer expects a Phenomenon that comes from a Source.",
+    //     "commonroles" : {
+    //         "role" : [
+    //             {
+    //                 "@idref" : "vecroleCognizer",
+    //                 "@spec" : ""
+    //             },
+    //             {
+    //                 "@idref" : "vecrolePhenomenon",
+    //                 "@spec" : ""
+    //             },
+    //             {
+    //                 "@idref" : "vecroleSource",
+    //                 "@spec" : ""
+    //             }
+    //         ]
+    //     },
+    //     "classnote" : null
+    // }
 
 const veclass_rolesSchema = {
     "@id" : String,
@@ -134,10 +173,96 @@ const Links_ces5 = dbConnection2.model("ces_reflexicon", linksSchema);
 const Links_deu5 = dbConnection2.model("deu_reflexicon", linksSchema);
 const Links_spa5 = dbConnection2.model("spa_reflexicon", linksSchema);
 
+// SynSemClass5.1 collections:
+const ClassMember51 = dbConnection3.model("englishlangmember", classMemberSchema);
+const ClassMemberCz51 = dbConnection3.model("czechlangmember", classMemberSchema);
+const ClassMemberDeu51 = dbConnection3.model("germanlangmember", classMemberSchema);
+const ClassMemberSpa51 = dbConnection3.model("spanishlangmember", classMemberSchema);
+
+const Roles51 = dbConnection3.model("role", rolesSchema);
+const Veclass_Roles51 = dbConnection3.model("veclass_role", veclass_rolesSchema);
+
+const Links_eng51 = dbConnection3.model("eng_reflexicon", linksSchema);
+const Links_ces51 = dbConnection3.model("ces_reflexicon", linksSchema);
+const Links_deu51 = dbConnection3.model("deu_reflexicon", linksSchema);
+const Links_spa51 = dbConnection3.model("spa_reflexicon", linksSchema);
+
+// Deprecated functions; no need since the database was updated to contain the roles
+const findRoleIdsByShortLabel = async (roles) => {
+    const roleIds = await Roles.find({ shortlabel: { $in: roles } }).select("@id");
+    return roleIds.map((role) => role["@id"]);
+};
+
+const findVeclassIdsByRoleIds = async (roleIds, roleOperators) => {
+    let veclassIds;
+
+    const statusNotMergedOrDeleted = {
+        "@status": { $nin: ["merged", "deleted"] },
+    };
+
+    if (roleOperators === "AND") {
+        const matchQuery = [
+        {
+            $match: {
+            ...statusNotMergedOrDeleted,
+            },
+        },
+        {
+            $addFields: {
+            processedRoles: {
+                $cond: [
+                { $isArray: "$commonroles.role" },
+                "$commonroles.role",
+                [{ $ifNull: ["$commonroles.role", []] }],
+                ],
+            },
+            },
+        },
+        {
+            $addFields: {
+            matchingRoles: {
+                $filter: {
+                input: "$processedRoles",
+                as: "role",
+                cond: { $in: ["$$role.@idref", roleIds] },
+                },
+            },
+            },
+        },
+        {
+            $match: {
+            matchingRoles: { $size: roleIds.length },
+            },
+        },
+        ];
+
+        veclassIds = await Veclass_Roles.aggregate(matchQuery).exec();
+    } else {
+        veclassIds = await Veclass_Roles.find({
+        "commonroles.role.@idref": { $in: roleIds },
+        ...statusNotMergedOrDeleted,
+        }).select("@id");
+    }
+
+    return veclassIds.map((veclass) => veclass["@id"] || veclass["_id"]);
+};
+
 // Main query search function that combines all search options together
 const findDocuments = async (input, idRef, classID, cmnote, restrict, clauses, restrictRolesSearch, diacriticsSensitive, collection, version) => {
     // Retrieve the list of valid Veclass_Roles documents that have their @status NOT in ["merged", "deleted"].
-    const VRoles = version == 'synsemclass5.0' ? Veclass_Roles5: Veclass_Roles;
+    let VRoles;
+
+    switch (version) {
+        case "synsemclass5.1":
+            VRoles = Veclass_Roles51;
+            break;
+        case "synsemclass5.0":
+            VRoles = Veclass_Roles5;
+            break;
+        case "synsemclass4.0":
+            VRoles = Veclass_Roles;
+	    break;
+    }
     console.log("version", version)
     const validVeclassIds = (await VRoles.find({ "@status": { $nin: ["merged", "deleted"] } }).select("@id")).map(veclass => veclass["@id"]);
 
@@ -149,6 +274,12 @@ const findDocuments = async (input, idRef, classID, cmnote, restrict, clauses, r
             "@id": { $in: validVeclassIds },
         },
         },
+        // { $addFields: {
+        //         "classmembers.classmember.common_id": "$@id",
+        //         "classmembers.classmember.common_class": "$@lemma",
+        //     }
+        // }, 
+        // other match conditions here
         {
         $group: {
             _id: "$@id",
@@ -218,6 +349,7 @@ const findDocuments = async (input, idRef, classID, cmnote, restrict, clauses, r
     //     matchConditions.push({ $and: clauseConditions });
     // }
 
+
     if (clauses) {
         const clauseConditions = clauses.map(clause => {
             const clauseCondition = clause.map(role => ({ '@roles': role }));
@@ -279,8 +411,21 @@ app.use(BASE_PATH, express.static(path.join(__dirname, '..', 'client', 'build'))
 router.get('/api/shortlabels', async (req, res) => {
     try {
         const version = req.body.version;
-        const roles_collection = version == 'synsemclass5.0' ? Roles5 : Roles;
-        const shortLabels = await getAllShortLabels(roles_collection);
+	
+	let roles_collection;
+        switch (version) {
+            case "synsemclass5.1":
+                roles_collection = Roles51;
+                break;
+            case "synsemclass5.0":
+                roles_collection = Roles5;
+                break;
+            case "synsemclass4.0":
+                roles_collection = Roles;
+		break;
+       }
+        
+	const shortLabels = await getAllShortLabels(roles_collection);
         if (!shortLabels.length) {
             return res.status(404).json({ error: 'No short labels found.' });
         }
@@ -331,6 +476,22 @@ router.post('/api/batch-links', async (req, res) => {
                     break;
             }
             break;
+        case "synsemclass5.1":
+            switch (lang) {
+                case "eng":
+                    Model = Links_eng51;
+                    break;
+                case "ces":
+                    Model = Links_ces51;
+                    break;
+                case "deu":
+                    Model = Links_deu51;
+                    break;
+                case "spa":
+                    Model = Links_spa51;
+                    break;
+            }
+            break;
     }
 
     
@@ -354,7 +515,7 @@ router.post('/api/batch-links', async (req, res) => {
 router.get("/api/search", function (req, res) {
     console.log("QUERY", req.query);
 
-    const version = req.query.version || 'synsemclass5.0';
+    const version = req.query.version || 'synsemclass5.1';
     const restrictRolesSearch = req.query.restrictRolesSearch === 'true';
     const diacriticsSensitive = req.query.diacriticsSensitive === 'true';
 
@@ -443,7 +604,25 @@ router.get("/api/search", function (req, res) {
         spa: ClassMemberSpa5
     };
     
-    const collections = version === 'synsemclass5.0' ? collections_v5 : collections_v4;
+    const collections_v51 = {
+        eng: ClassMember51,
+        cz: ClassMemberCz51,
+        deu: ClassMemberDeu51,
+        spa: ClassMemberSpa51
+    };
+    
+    let collections;
+    switch (version){
+        case 'synsemclass4.0':
+   	    collections = collections_v4;
+            break;
+        case 'synsemclass5.0':
+            collections = collections_v5;
+            break;
+        case 'synsemclass5.1':
+            collections = collections_v51;
+            break;
+    }
     
     const searchFunctions = [];
     
@@ -624,4 +803,5 @@ if (isQuest) {
         console.log(`HTTP server started on ${serverConfig.host}:${port}`);
     });
 }
+
 

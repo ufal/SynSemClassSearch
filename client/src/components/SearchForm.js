@@ -459,7 +459,6 @@ const SearchForm = () => {
         />
         synsemclass5.1
       </label>
-    <div className="db-selection-container">
     <label className="db-selection-label">
         <input
           type="radio"
