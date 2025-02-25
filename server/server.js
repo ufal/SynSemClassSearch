@@ -412,7 +412,7 @@ router.get('/api/shortlabels', async (req, res) => {
     try {
         const version = req.body.version;
 	
-	let roles_collection;
+	let roles_collection = Roles51;
         switch (version) {
             case "synsemclass5.1":
                 roles_collection = Roles51;
